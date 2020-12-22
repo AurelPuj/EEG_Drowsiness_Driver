@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec 22 11:31:01 2020
+
+Copyright:
+Wei-Long Zheng and Bao-Liang Lu
+Center for Brain-like Computing and Machine Intelligence, Department of Computer Science and Engineering, Shanghai Jiao Tong University, China
+Key Laboratory of Shanghai Education Commission for Intelligent Interaction and Cognitive Engineering, Shanghai Jiao Tong University, China
+Brain Science and Technology Research Center, Shanghai Jiao Tong University, China
 
 @author: Aurelien
 """
@@ -63,5 +68,19 @@ def mat_to_df_raw_data () :
             df = pd.read_csv(csv_path, sep=";")
             
         dict_df[file_name.replace(".mat","")]=df
+        
     return dict_df
 
+def mat_to_df_perclos_label ():
+    
+    Path = "..\\DataBase\\SEED-VIG\\EEG_Feature_2Hz\\1_20151124_noon_2.mat"
+    data_mat = scipy.io.loadmat(Path)
+    print(data_mat.keys())
+    
+    print(data_mat['psd_movingAve'][0][0])
+    print(len(data_mat['psd_movingAve'][0][0]))
+    
+    
+    
+    
+    

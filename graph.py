@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec 22 12:07:56 2020
+
+Copyright:
+Wei-Long Zheng and Bao-Liang Lu
+Center for Brain-like Computing and Machine Intelligence, Department of Computer Science and Engineering, Shanghai Jiao Tong University, China
+Key Laboratory of Shanghai Education Commission for Intelligent Interaction and Cognitive Engineering, Shanghai Jiao Tong University, China
+Brain Science and Technology Research Center, Shanghai Jiao Tong University, China
 
 @author: Aurelien
 """
