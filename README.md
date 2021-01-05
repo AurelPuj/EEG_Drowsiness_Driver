@@ -1,4 +1,4 @@
-# EEG_Drowsiness_Driver
+# EEG Drivers Drowsiness Detection
  
 <img src="https://github.com/AurelPuj/EEG_Drowsiness_Driver/blob/main/EEG_Drivers_Drowsiness_Detection.jpg"/> 
  
