@@ -11,7 +11,7 @@ Brain Science and Technology Research Center, Shanghai Jiao Tong University, Chi
 """
 
 import os
-from raw_data_to_csv import mat_to_df_raw_data
+from traitement_data import mat_to_df_raw_data
 from graph import plot_band_graph
 
 # On récupère tout les samples des 23 participants

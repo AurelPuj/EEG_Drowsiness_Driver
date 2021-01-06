@@ -12,6 +12,7 @@ Brain Science and Technology Research Center, Shanghai Jiao Tong University, Chi
 
 import matplotlib.pyplot as plt
 
+
 def plot_band_graph(df_raw_data,file_name):
     
     fig,axs = plt.subplots(6,3)
