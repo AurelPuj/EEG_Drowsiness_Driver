@@ -121,11 +121,11 @@ def df_5band():
 
                     data_dict[signal_analyse_component][band_data] = []
                     for band_tab in data_signal_analyse_component[index] :
-                        data_dict[signal_analyse_component][band_data].append(band_tab)
+                        data_dict[signal_analyse_component][band_data].append(band_tab[1])
 
                 data_dict[signal_analyse_component]['perclos'] = []
                 for perclos in data_mat_perclos['perclos']:
-                    data_dict[signal_analyse_component]['perclos'].append(perclos)
+                    data_dict[signal_analyse_component]['perclos'].append(perclos[0])
 
                 # On crée un dataframe dans lequel on stock le dictionnaire -> plus rapide
                 df = pd.DataFrame(data_dict[signal_analyse_component])
@@ -133,10 +133,7 @@ def df_5band():
 
                 data_dict[signal_analyse_component] = [pd.DataFrame(data_dict[signal_analyse_component])]
 
-            file_name.replace(".mat", ".csv")
-            df = pd.read_csv((path_csv + "\\psd_LDS_11_20151024_night.csv"), sep=";")
-            print(df['FT7'][0])
-            os.system("pause")
+
 
         else:
             # Si le fichier csv existe déjà on charge directement les données depuis celui-ci
