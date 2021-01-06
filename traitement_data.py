@@ -65,16 +65,10 @@ def mat_to_df_raw_data():
             df.to_csv(csv_path, sep=";", index=False)
             
             file_name.replace(".mat", ".csv")
-        
-        else:
-            # Si le fichier csv existe déjà on charge directement les données depuis celui-ci
-            df = pd.read_csv(csv_path, sep=";")
-            print(file_name)
-            
-        dict_df[file_name.replace(".mat", "")] = df
 
 
 def df_5band():
+
     path = "..\\DataBase\\SEED-VIG\\EEG_Feature_5Bands"
     path_raw_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
     path_csv = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv"
@@ -91,19 +85,17 @@ def df_5band():
     for (repertoire, sousRepertoires, file) in os.walk(path_csv):
         list_csv.extend(file)
 
-    for file_name in list_files[0:2]:
+    for file_name in list_files:
         file_csv = file_name.replace(".mat", ".csv")
         csv_raw_path = path_raw_csv + "\\" + file_csv
         csv_path = path_csv + "\\" + file_csv
 
         if file_csv not in list_csv:
 
-            # Si le fichier csv existe déjà on charge directement les données depuis celui-ci
             df_raw = pd.read_csv(csv_raw_path, sep=";")
             band_headers = list(df_raw)
             waves = ['delta', 'theta', 'alpha', 'beta', 'gamma']
 
-            # On récupère les données stockées dans le fichier mat
             data_mat = scipy.io.loadmat(path + "\\" + file_name)
             data_mat_perclos = scipy.io.loadmat(path_perclos + "\\" + file_name)
 
@@ -117,28 +109,16 @@ def df_5band():
 
             for signal_analyse_component in header_signal_analyse_component:
                 data_signal_analyse_component = data_mat[signal_analyse_component]
-                data_dict[signal_analyse_component] = {}
                 for index, band_data in enumerate(band_headers):
                     for index_waves,wave in enumerate(waves):
-                        data_dict[signal_analyse_component][band_data+"_"+wave] = []
-                        for band_tab in data_signal_analyse_component[index] :
-                            data_dict[signal_analyse_component][band_data+"_"+wave].append(band_tab[index_waves])
+                        column_header = band_data+"_"+wave+"_"+signal_analyse_component
+                        data_dict[column_header] = []
+                        for band_tab in data_signal_analyse_component[index]:
+                            data_dict[column_header].append(band_tab[index_waves])
 
-                data_dict[signal_analyse_component]['perclos'] = []
+                data_dict['perclos'] = []
                 for perclos in data_mat_perclos['perclos']:
-                    data_dict[signal_analyse_component]['perclos'].append(perclos[0])
+                    data_dict['perclos'].append(perclos[0])
 
-                # On crée un dataframe dans lequel on stock le dictionnaire -> plus rapide
-                df = pd.DataFrame(data_dict[signal_analyse_component])
-                df.to_csv(path_csv + "\\" + signal_analyse_component + "_" + file_csv, sep=";", index=False)
-
-                data_dict[signal_analyse_component] = [pd.DataFrame(data_dict[signal_analyse_component])]
-
-
-def mat_to_df_perclos_label():
-
-    path = "..\\DataBase\\SEED-VIG\\perclos_labels\\1_20151124_noon_2.mat"
-    data_mat = scipy.io.loadmat(path)
-    print(data_mat.keys())
-
-    print(data_mat['psd_movingAve'].shape)
+            df = pd.DataFrame(data_dict)
+            df.to_csv(path_csv + "\\" + file_csv, sep=";", index=False)

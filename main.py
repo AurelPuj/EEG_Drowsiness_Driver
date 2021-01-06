@@ -22,7 +22,7 @@ from graph import plot_band_graph
 
 df_5band()
 
-file_path = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv\\psd_LDS_11_20151024_night.csv"
+file_path = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv\\10_20151125_noon.csv"
 dataset = pd.read_csv(file_path, sep=";")
 print(dataset.describe())
 
