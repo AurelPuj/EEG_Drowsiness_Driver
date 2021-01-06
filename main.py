@@ -18,21 +18,10 @@ import numpy as np
 from traitement_data import mat_to_df_raw_data
 from traitement_data import mat_to_df_perclos_label
 from traitement_data import df_5band
-
 from graph import plot_band_graph
 
-'''
-# On récupère tout les samples des 23 participants
-dict_df_raw_data = mat_to_df_raw_data()
+df_5band()
 
-# On récupère les noms de fichiers/échantillons
-samples_headers = list(dict_df_raw_data)
-
-# On plot toutes les données et on sauvegarde dans des fichiers pdf
-for sample in samples_headers :
-    df_sample_to_plot = dict_df_raw_data[sample]
-    plot_band_graph(df_sample_to_plot, sample)
-'''
 file_path = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv\\psd_LDS_11_20151024_night.csv"
 dataset = pd.read_csv(file_path, sep=";")
 print(dataset.describe())

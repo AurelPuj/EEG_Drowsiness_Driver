@@ -101,6 +101,7 @@ def df_5band():
             # Si le fichier csv existe déjà on charge directement les données depuis celui-ci
             df_raw = pd.read_csv(csv_raw_path, sep=";")
             band_headers = list(df_raw)
+            waves = ['delta', 'theta', 'alpha', 'beta', 'gamma']
 
             # On récupère les données stockées dans le fichier mat
             data_mat = scipy.io.loadmat(path + "\\" + file_name)
@@ -118,10 +119,10 @@ def df_5band():
                 data_signal_analyse_component = data_mat[signal_analyse_component]
                 data_dict[signal_analyse_component] = {}
                 for index, band_data in enumerate(band_headers):
-
-                    data_dict[signal_analyse_component][band_data] = []
-                    for band_tab in data_signal_analyse_component[index] :
-                        data_dict[signal_analyse_component][band_data].append(band_tab[1])
+                    for index_waves,wave in enumerate(waves):
+                        data_dict[signal_analyse_component][band_data+"_"+wave] = []
+                        for band_tab in data_signal_analyse_component[index] :
+                            data_dict[signal_analyse_component][band_data+"_"+wave].append(band_tab[index_waves])
 
                 data_dict[signal_analyse_component]['perclos'] = []
                 for perclos in data_mat_perclos['perclos']:
@@ -132,13 +133,6 @@ def df_5band():
                 df.to_csv(path_csv + "\\" + signal_analyse_component + "_" + file_csv, sep=";", index=False)
 
                 data_dict[signal_analyse_component] = [pd.DataFrame(data_dict[signal_analyse_component])]
-
-
-
-        else:
-            # Si le fichier csv existe déjà on charge directement les données depuis celui-ci
-
-            dict_df[file_name.replace(".mat", "")] = df
 
 
 def mat_to_df_perclos_label():
