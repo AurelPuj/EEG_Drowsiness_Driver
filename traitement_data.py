@@ -11,15 +11,15 @@ Brain Science and Technology Research Center, Shanghai Jiao Tong University, Chi
 """
 
 import os
-import scipy.io 
+import scipy.io
 import pandas as pd
+import json
 
 
 def mat_to_df_raw_data():
 
     path = "..\\DataBase\\SEED-VIG\\Raw_Data"
     path_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
-    dict_df = {}
     
     # On charge l'ensemble des fichiers .mat existant
     list_files = []
@@ -73,6 +73,8 @@ def df_5band():
     path_raw_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
     path_csv = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv"
     path_perclos = "..\\DataBase\\SEED-VIG\\perclos_labels"
+    path_json = "..\\DataBase\\SEED-VIG\\EEG_json"
+
     dict_df = {}
 
     # On charge l'ensemble des fichiers .mat existant
@@ -110,7 +112,7 @@ def df_5band():
             for signal_analyse_component in header_signal_analyse_component:
                 data_signal_analyse_component = data_mat[signal_analyse_component]
                 for index, band_data in enumerate(band_headers):
-                    for index_waves,wave in enumerate(waves):
+                    for index_waves, wave in enumerate(waves):
                         column_header = band_data+"_"+wave+"_"+signal_analyse_component
                         data_dict[column_header] = []
                         for band_tab in data_signal_analyse_component[index]:
@@ -122,3 +124,6 @@ def df_5band():
 
             df = pd.DataFrame(data_dict)
             df.to_csv(path_csv + "\\" + file_csv, sep=";", index=False)
+
+            file_json = path_json + "\\" + file_name.replace(".mat", ".json")
+            df.to_json(file_json, orient="records")
