@@ -3,9 +3,10 @@
 
 Copyright:
 Wei-Long Zheng and Bao-Liang Lu
-Center for Brain-like Computing and Machine Intelligence, Department of Computer Science and Engineering, Shanghai Jiao Tong University, China
-Key Laboratory of Shanghai Education Commission for Intelligent Interaction and Cognitive Engineering, Shanghai Jiao Tong University, China
-Brain Science and Technology Research Center, Shanghai Jiao Tong University, China
+Center for Brain-like Computing and Machine Intelligence, Department of Computer Science and Engineering,
+Shanghai Jiao Tong University, ChinaKey Laboratory of Shanghai Education Commission for Intelligent Interaction
+and Cognitive Engineering, Shanghai Jiao Tong University, China Brain Science and Technology Research Center,
+Shanghai Jiao Tong University, China
 
 @author: Aurelien
 """
@@ -13,11 +14,10 @@ Brain Science and Technology Research Center, Shanghai Jiao Tong University, Chi
 from flask import Flask, request, jsonify
 import pandas as pd
 import joblib
-import requests
 import traceback
 
 
-def start_api ():
+def start_api():
 
     app = Flask("MyEEG")
 
@@ -42,10 +42,11 @@ def start_api ():
 
         else:
             print('Train the model first')
-            return ('No model here to use')
+            return 'No model here to use'
 
     @app.route("/")
     def hello():
         return "Welcome to machine learning model APIs!"
 
     app.run(debug=True)
+
