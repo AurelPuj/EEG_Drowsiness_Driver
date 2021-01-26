@@ -53,4 +53,3 @@ def train_ml():
 
     model_columns = list(X.columns)
     joblib.dump(model_columns, './api/columns.pkl')
-
