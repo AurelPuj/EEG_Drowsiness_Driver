@@ -21,10 +21,10 @@ def start_api():
 
     app = Flask("MyEEG")
 
-    model = joblib.load('model.pkl')
+    model = joblib.load('../api/LinearRegression.pkl')
     print('Model loaded')
 
-    model_columns = joblib.load('model_columns.pkl')
+    model_columns = joblib.load('../api/columns.pkl')
     print('Model columns loaded')
 
     @app.route('/predict', methods=['POST'])  # Your API endpoint URL would consist /predict
