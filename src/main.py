@@ -16,7 +16,6 @@ import os
 from api import start_api
 
 train_ml()
-start_api()
 
 os.system("pause")
 

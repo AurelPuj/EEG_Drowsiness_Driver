@@ -21,7 +21,9 @@ import joblib
 def train_ml():
 
     # on prépare les données
+    print("Raw data to csv")
     mat_to_df_raw_data()
+    print("EEG_5_band to csv")
     df_5band()
 
     # on charge le dataset du 10_20151125_noon.csv
@@ -39,6 +41,7 @@ def train_ml():
     # on sépare le tout en un ensemble d'entrainement et un de test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
+    model_name = 'LinearRegression'
     # on crée le modèle et on l'entraine
     model = LinearRegression()
     model.fit(X_train, y_train)
@@ -46,8 +49,8 @@ def train_ml():
     # on affiche ensuite l(accuracy et enfin on sauvegarde le modèle entrainé
     print(model.score(X_test, y_test))
 
-    joblib.dump(model, 'model.pkl')
+    joblib.dump(model, './api/'+model_name+'.pkl')
 
     model_columns = list(X.columns)
-    joblib.dump(model_columns, 'model_columns.pkl')
+    joblib.dump(model_columns, './api/columns.pkl')
 
