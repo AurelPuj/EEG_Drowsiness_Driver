@@ -31,7 +31,7 @@ def predict():
            return jsonify({'prediction': prediction})
 
        except:
-           return "error"
+           return "An error occur"
 
    else:
        print('Train the model first')
