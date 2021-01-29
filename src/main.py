@@ -12,9 +12,6 @@ Shanghai Jiao Tong University, China
 """
 
 import os
-from api.api import start_api
-
-start_api()
 
 os.system("pause")
 

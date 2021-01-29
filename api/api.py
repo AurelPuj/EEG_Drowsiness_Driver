@@ -11,7 +11,9 @@ Brain Science and Technology Research Center, Shanghai Jiao Tong University, Chi
 from flask import Flask, request, jsonify
 import pandas as pd
 import joblib
+from mongo import init_mongo_db
 
+#Create API and load ML Algo
 app = Flask("MyEEG")
 print("lancement de l'api")
 model = joblib.load('LinearRegression.pkl')
@@ -19,23 +21,26 @@ print('Model loaded')
 model_columns = joblib.load('columns.pkl')
 print('Model columns loaded')
 
+#Initialise the database
+init_mongo_db()
+
 
 @app.route('/predict', methods=['POST'])  # Your API endpoint URL would consist /predict
 def predict():
-   if model:
-       try:
-           json_ = request.json
-           query = pd.get_dummies(pd.DataFrame(json_))
-           query = query.reindex(columns=model_columns, fill_value=0)
-           prediction = list(model.predict(query))
-           return jsonify({'prediction': prediction})
+    if model:
+        try:
+            json = request.json
+            query = pd.get_dummies(pd.DataFrame(json))
+            query = query.reindex(columns=model_columns, fill_value=0)
+            prediction = list(model.predict(query))
+            return jsonify({'prediction': prediction})
 
-       except:
-           return "An error occur"
+        except:
+            return "An error occur"
 
-   else:
-       print('Train the model first')
-       return 'No model here to use'
+    else:
+        print('Train the model first')
+        return 'No model here to use'
 
 @app.route("/")
 def hello():
