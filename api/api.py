@@ -17,9 +17,9 @@ from flask_pymongo import PyMongo
 # Create API and load ML Algo
 app = Flask("MyEEG")
 print("lancement de l'api")
-model = joblib.load('LinearRegression.pkl')
+model = joblib.load('models/LinearRegression.pkl')
 print('Model loaded')
-model_columns = joblib.load('columns.pkl')
+model_columns = joblib.load('models/columns.pkl')
 print('Model columns loaded')
 
 # Initialise the database
