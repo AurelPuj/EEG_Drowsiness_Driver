@@ -11,9 +11,8 @@ Shanghai Jiao Tong University, China
 @author: Aurelien
 """
 
-from model import train_ml
 import os
-from api import start_api
+from api.api import start_api
 
 start_api()
 
