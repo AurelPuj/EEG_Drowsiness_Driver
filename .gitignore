@@ -3,3 +3,4 @@ __pycache__/raw_data_to_csv.cpython-37.pyc
 __pycache__/raw_data_to_csv.cpython-37.pyc
 api/__pycache__/api.cpython-36.pyc
 api/__pycache__/mongo.cpython-36.pyc
+*.xml
