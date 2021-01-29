@@ -11,9 +11,4 @@ Shanghai Jiao Tong University, China
 @author: Aurelien
 """
 
-import os
-
-os.system("pause")
-
-
 
