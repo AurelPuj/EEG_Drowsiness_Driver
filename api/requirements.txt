@@ -1,0 +1,6 @@
+flask
+pandas
+joblib
+sklearn
+flask_pymongo
+pymongo
