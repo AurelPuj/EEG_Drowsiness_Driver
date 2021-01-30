@@ -45,4 +45,14 @@ docker-compose up
   curl -i http://0.0.0.0:5000/version
   ``` 
 
+<h2> Technologie de l'API </h2>
 
+<h4> Principe et shématisation </h4> 
+
+<h3>Flask API </h3> 
+
+![alt text](./logo/docker-logo.jpg  )
+
+<h3>Mongo DB </h3>
+
+<h3>Docker </h3>
