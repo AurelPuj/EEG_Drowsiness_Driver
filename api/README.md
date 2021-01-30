@@ -1,4 +1,9 @@
-<h2> installation </h2>
+<h2> Presentation </h2>
+Voici une petite api accompagnant le projet de reconnaissance par EEG de l'endormissement au volant.
+Cet api vous permet de predire la mise en danger du conducteur sur une base de 17 électrodes. 
+
+
+<h2> Installation </h2>
  1.pré-requis :
  
   - git 
@@ -34,3 +39,10 @@ docker-compose up
    
     
 <h2> Utilisation </h2>
+
+1. Test de l'installation 
+  ```bash
+  curl -i http://0.0.0.0:5000/version
+  ``` 
+
+
