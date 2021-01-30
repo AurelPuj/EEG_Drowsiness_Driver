@@ -49,10 +49,9 @@ docker-compose up
 
 <h4> Principe et shématisation </h4> 
 
-<h3>Flask API </h3> 
+<h3>Flask API        </h3>  
 
-![alt text](./logo/docker-logo.jpg  )
 
 <h3>Mongo DB </h3>
 
-<h3>Docker </h3>
+<h3>Docker <img src="./logo/docker-logo.jpg" > </h3>
