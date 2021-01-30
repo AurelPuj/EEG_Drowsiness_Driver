@@ -1,6 +1,6 @@
 <h2> Presentation </h2>
-Voici une petite api accompagnant le projet de reconnaissance par EEG de l'endormissement au volant.
-Cet api vous permet de predire la mise en danger du conducteur sur une base de 17 électrodes. 
+Voici une petite api accompagnent le projet de reconnaissance par EEG de l'endormissement au volant.
+Cet api vous permet de predire la mise en danger du conducteur sur une base de 17 électrodes a partir d'une sequence Raw_data d'EEG
 
 
 <h2> Installation </h2>
@@ -48,6 +48,11 @@ docker-compose up
 <h2> Technologie de l'API </h2>
 
 <h4> Principe et shématisation </h4> 
+L'utilisateur envoie un fichier contenant les Raw data D'EEG et specifie le modéle à utiliser ( ex: LinearRegression , CNN , Treeboosting ...)
+L'API reçoi le fichier et l'instruction du modèle puis en fonction du modèle choisi, l'api vas chercher les poids du modèle dans la base de donée.
+Ensuite l'API renvoi les donnée predite dans un fichier json a l'utilisateur.
+
+<img src ="./logo/API_shématic.png">
 
 
 <h3>Flask API        </h3>  
