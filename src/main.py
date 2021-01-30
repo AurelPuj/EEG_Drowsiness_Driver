@@ -11,4 +11,6 @@ Shanghai Jiao Tong University, China
 @author: Aurelien
 """
 
+from model import train_ml
+train_ml()
 
