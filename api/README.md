@@ -49,9 +49,12 @@ docker-compose up
 
 <h4> Principe et shématisation </h4> 
 
-<h3>Flask API        </h3>  
 
+<h3>Flask API        </h3>  
+Flask Api est simple a mettre en place et permet une utilisation rapide et efficace 
 
 <h3>Mongo DB </h3>
+Nous utilisons le service Mongo DB car c'est une basée de donnée document oriented 
 
 <h3>Docker <img src="./logo/docker-logo.jpg" > </h3>
+Docker nous permet de d'associer et nos 2 services précedent 
