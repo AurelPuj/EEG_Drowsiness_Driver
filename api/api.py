@@ -72,10 +72,10 @@ def predict():
 
 @app.route("/")
 def hello():
-    return "Welcome to machine learning model APIs!"
+    return "Welcome to machine learning model APIs for predict EEG drowsiness!"
 
 
-@app.route('/find_model')
+@app.route('/model')
 def find_model():
     _dict = db.model.find()
 
@@ -92,20 +92,6 @@ def find_model():
         status=True,
         model_list=data
     )
-
-
-@app.route('/upload', methods=['POST'])
-def create_data():
-    dict_data = request.get_json(force=True)
-    item = {
-        'eeg_data': dict_data['data']
-    }
-    db.data.insert_one(item)
-
-    return jsonify(
-        status=True,
-        message='To-do saved successfully!'
-    ), 201
 
 
 if __name__ == "__main__":
