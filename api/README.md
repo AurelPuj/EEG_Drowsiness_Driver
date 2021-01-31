@@ -95,3 +95,7 @@ La technologie Docker nous permet de contenairiser notre API , et de réaliser l
 
 <h2> Restrospective </h2> 
 
+Grace à cette API nous avons appris beaucoup de choses  sur la mise en place des 3 technologies et leur mise en relation entre elle.
+Deplus c'etait la 1er fois que nous implementions un système de Machine et Deep Learning dans une API.
+Avec cette expérience nous sommes montés en compétence sur la réalisation des fichiers Dockerfile et docker-compose.yml.
+Nous avons aussi pu appliquer le cour sur les bases NoSQL et orienté objet dans un cas pratique et cohérent.
