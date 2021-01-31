@@ -7,8 +7,8 @@ Cet api vous permet de predire la mise en danger du conducteur sur une base de 1
 <h2> Installation </h2>
 
 1. Pré-requis :
-	- git 
-	- docker/docker-compose 
+- git 
+- docker/docker-compose 
 
 	```
 	git clone https://github.com/AurelPuj/EEG_Drowsiness_Driver.git
