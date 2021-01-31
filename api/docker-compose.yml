@@ -1,6 +1,6 @@
 version : '3.0'
 services :
-    api-service :
+    api :
         build : ./
         volumes :
             - ./:/usr/src/app/
@@ -19,7 +19,6 @@ services :
         depends_on:
             - mongodb
         networks:
-            - frontend
             - backend
 
     mongodb:
@@ -39,8 +38,6 @@ services :
             - backend
 
 networks:
-    frontend:
-        driver: bridge
     backend:
         driver: bridge
 
