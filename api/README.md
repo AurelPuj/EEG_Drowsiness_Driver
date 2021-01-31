@@ -32,12 +32,12 @@ Cet api vous permet de predire la mise en danger du conducteur sur une base de 1
 	mongo -u mongodbuser -p
 	use flaskdb
 	db.createUser({user: 'flaskuser', pwd: '1234', roles: [{role: 'readWrite', db: 'flaskdb'}]})
+	exit
 	```
 
 - se log sur la base de donnée :
 
 	``` bash 
-	exit
 	mongo -u flaskuser -p your password --authenticationDatabase flaskdb
 	exit
 	exit
