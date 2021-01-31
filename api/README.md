@@ -38,7 +38,7 @@ Cet api vous permet de predire la mise en danger du conducteur sur une base de 1
 - se log sur la base de donnée :
 
 	``` bash 
-	mongo -u flaskuser -p your password --authenticationDatabase flaskdb
+	mongo -u flaskuser -p 1234 --authenticationDatabase flaskdb
 	exit
 	exit
 	```
