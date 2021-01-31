@@ -93,7 +93,7 @@ Il existe d'autre technologie comme cassandraDB ou postgre mais toute deux moins
 
 La technologie Docker nous permet de contenairiser notre API , et de réaliser le liens entre MongoDB et Flask API. Nous avons choisis aussi Docker car elle permet une facilité de portabilité de notre API et son installation.Nous n'avons pas pris les alternatives comme Cononical LXD ou  Kubernetes car nous misons sur nos conaissances préalable de Docker pour un resultat plus rapide.
 
-<h2> Restrospective </h2> 
+<h2> Réstrospective </h2> 
 
 Grace à cette API nous avons appris beaucoup de choses  sur la mise en place des 3 technologies et leur mise en relation entre elle.
 Deplus c'etait la 1er fois que nous implementions un système de Machine et Deep Learning dans une API.
