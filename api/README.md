@@ -1,10 +1,10 @@
-<h2> Presentation </h2>
+<h2> Présentation </h2>
 Voici une petite api accompagnent le projet de reconnaissance par EEG de l'endormissement au volant.
 Cet api vous permet de predire la mise en danger du conducteur sur une base de 17 électrodes a partir d'une sequence Raw_data d'EEG
 
 
 <h2> Installation </h2>
- 1.pré-requis :
+ 1. Pré-requis :
  
   - git 
   - docker/docker-compose 
@@ -14,12 +14,12 @@ git clone https://github.com/AurelPuj/EEG_Drowsiness_Driver.git
 ```
 
 
-2.lancement du docker-compose :
+2. Lancement du docker-compose :
 ```bash
 cd EEG_Drowsiness_Driver/api/ 
 docker-compose up 
 ```
-3.connexion a la base de donnée :
+3. Connexion a la base de donnée :
 
    - ouvrir un nouveau terminal 
    - créer un nouveau user :
@@ -44,12 +44,14 @@ docker-compose up
 ```bash
 curl -i http://0.0.0.0:5000/
 ``` 
+
    Cette fonction devrait vous afficher un message de bienvenue.
  
 2. Modèle stocker dans la database mongodb
 ```bash
 curl -i http://0.0.0.0:5000/model
 ``` 
+
    Cette requête vous retourne la liste de tout les modèles actuellement stockés dans la database mongodb.
   
 3. Prédiction
