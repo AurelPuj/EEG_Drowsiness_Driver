@@ -41,17 +41,16 @@ docker-compose up
 <h2> Utilisation </h2>
 
 1. Test de l'installation 
-  ```bash
-  curl -i http://0.0.0.0:5000/
-  ``` 
-  Cette fonction devrait vous afficher un message de bienvenue.
+```bash
+curl -i http://0.0.0.0:5000/
+``` 
+   Cette fonction devrait vous afficher un message de bienvenue.
  
 2. Modèle stocker dans la database mongodb
-
-  ```bash
-   curl -i http://0.0.0.0:5000/model
-  ``` 
-  Cette requête vous retourne la liste de tout les modèles actuellement stockés dans la database mongodb.
+```bash
+curl -i http://0.0.0.0:5000/model
+``` 
+   Cette requête vous retourne la liste de tout les modèles actuellement stockés dans la database mongodb.
   
 3. Prédiction
 
