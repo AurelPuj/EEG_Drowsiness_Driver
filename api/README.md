@@ -58,7 +58,7 @@ Ensuite l'API renvoi les donnée predite dans un fichier json a l'utilisateur.
 <h3>Flask API </h3> 
 
 Flask est un framework Web en croissance rapide, conçu pour un processus de conception d'API plus efficace. Eh bien, ce n’est que l’un des usages possibles de Flask.
-Flash est léger est très bien documenter. Il exite aussi d'autre framework comme Fast API qui posssede les même avantages que Flask mais nos connaissent préalable sur Flask API nous ont permis de gagner en efficacité sur la mise en place. 
+Flash est léger est très bien documenté. Il exite aussi d'autre framework comme Fast API qui posssede les même avantages que Flask mais nos connaissances, préalable sur Flask API nous ont permis de gagner en efficacité sur la mise en place. 
 <h3>Mongo DB </h3>
 
 MongoDB est un système de base de donnée orienté objet, dynamique, stable, scalable et sans SQL.
@@ -68,7 +68,7 @@ Il existe d'autre technologie comme cassandraDB ou postgre mais toute deux moins
 
 <h3>Docker  </h3>
 
-La technologie nous permet de contenairiser notre API , et de réaliser le liens entre MongoDB et Flask API.
+La technologie Docker nous permet de contenairiser notre API , et de réaliser le liens entre MongoDB et Flask API.
 Nous avons choisis aussi Docker car elle permet une facilité de portabilité de notre API et son installation.
-Nous n'avons pas pris les alternatives comme Cononical LXD ou  Kubernetes car nous misosn sur nos conaissances préalable de Docker.
+Nous n'avons pas pris les alternatives comme Cononical LXD ou  Kubernetes car nous misons sur nos conaissances préalable de Docker pour un resultat plus rapide.
  
