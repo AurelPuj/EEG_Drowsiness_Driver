@@ -24,8 +24,8 @@ Cet api vous permet de predire la mise en danger du conducteur sur une base de 1
 				
 3. Connexion a la base de donnée :
 
-	- ouvrir un nouveau terminal 
-	- créer un nouveau user :
+- ouvrir un nouveau terminal 
+- créer un nouveau user :
 
 	```bash 
 	docker exec -it mongodb bash
@@ -34,7 +34,7 @@ Cet api vous permet de predire la mise en danger du conducteur sur une base de 1
 	db.createUser({user: 'flaskuser', pwd: '1234', roles: [{role: 'readWrite', db: 'flaskdb'}]})
 	```
 
-	- se log sur la base de donnée :
+- se log sur la base de donnée :
 
 	``` bash 
 	exit
