@@ -28,19 +28,19 @@ docker-compose up
 - créer un nouveau user :
 
 ```bash 
-   docker exec -it mongodb bash
-   mongo -u mongodbuser -p
-   use flaskdb
-   db.createUser({user: 'flaskuser', pwd: '1234', roles: [{role: 'readWrite', db: 'flaskdb'}]})
+docker exec -it mongodb bash
+mongo -u mongodbuser -p
+use flaskdb
+db.createUser({user: 'flaskuser', pwd: '1234', roles: [{role: 'readWrite', db: 'flaskdb'}]})
 ```
 
 - se log sur la base de donnée :
 
 ``` bash 
-   exit
-   mongo -u flaskuser -p your password --authenticationDatabase flaskdb
-   exit
-   exit
+exit
+mongo -u flaskuser -p your password --authenticationDatabase flaskdb
+exit
+exit
 ```
    
     
