@@ -16,6 +16,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from traitement_data import df_5band, mat_to_df_raw_data
 import joblib
+import keras
+from keras.layers import Conv2D, Dense, Flatten
+import tensorflow as tf
 
 
 def train_ml():
@@ -27,7 +30,7 @@ def train_ml():
     df_5band()
 
     # on charge le dataset du 10_20151125_noon.csv
-    file_path = "../../SEED-VIG/5Bands_Perclos_Csv/10_20151125_noon.csv"
+    file_path = "..\\DataBase\\SEED-VIG\\Dataset_Regression.csv"
     dataset = pd.read_csv(file_path, sep=";")
     print(dataset.describe())
 
@@ -49,7 +52,33 @@ def train_ml():
     # on affiche ensuite l(accuracy et enfin on sauvegarde le modèle entrainé
     print(model.score(X_test, y_test))
 
-    joblib.dump(model, '../api/models/'+model_name+'.pkl')
+    joblib.dump(model, './api/models/'+model_name+'.pkl')
 
     model_columns = list(X.columns)
-    joblib.dump(model_columns, '../api/models/columns.pkl')
+    joblib.dump(model_columns, './api/models/columns.pkl')
+
+
+def train_dl():
+
+    file_path = "..\\DataBase\\SEED-VIG\\Dataset_Raw.csv"
+    dataset = pd.read_csv(file_path, sep=";")
+
+    X = dataset.drop(['perclos'], axis=1)
+    y = dataset['perclos']
+
+    model = keras.models.Sequential()
+    model.add(Conv2D(filter=64, kernel_size=1, input_shape=(dataset.shape[1], dataset.shape[0], 1)))
+    model.add(Flatten())
+    model.add(Dense(4))
+    model.summary()
+
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=keras.optimizers.SGD(lr=0.01),
+                  metrics=['accuracy'])
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    model.fit(x_train, y_train,
+              epochs=10,
+              verbose=1,
+              validation_data=(x_test, y_test),
+              callbacks=[history])

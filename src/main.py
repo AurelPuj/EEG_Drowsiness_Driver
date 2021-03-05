@@ -11,6 +11,10 @@ Shanghai Jiao Tong University, China
 @author: Aurelien
 """
 
-from model import train_ml
-train_ml()
+from traitement_data import df_concat, df_5band, stat_study
+from model import train_ml, train_dl
 
+#stat_study("..\\DataBase\\SEED-VIG\\Dataset_Classification.csv")
+#df_concat()
+#train_ml()
+train_dl()

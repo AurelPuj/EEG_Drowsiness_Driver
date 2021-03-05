@@ -14,6 +14,10 @@ Shanghai Jiao Tong University, China
 import os
 import scipy.io
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats as st
+import seaborn as sns
 
 
 def mat_to_df_raw_data():
@@ -121,9 +125,109 @@ def df_5band():
                 data_dict['perclos'] = []
                 for perclos in data_mat_perclos['perclos']:
                     data_dict['perclos'].append(perclos[0])
-
+            print(data_dict['perclos'])
             df = pd.DataFrame(data_dict)
             df.to_csv(path_csv + "\\" + file_csv, sep=";", index=False)
 
             file_json = path_json + "\\" + file_name.replace(".mat", ".json")
             df.to_json(file_json, orient="records")
+
+
+def df_concat():
+
+    path_raw_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
+    path_csv = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv"
+    path = "..\\DataBase\\SEED-VIG"
+    dict_df = {}
+    df_total = None
+
+    # On charge l'ensemble des fichiers .csv existant
+    list_csv = []
+    for (repertoire, sousRepertoires, file) in os.walk(path_csv):
+        list_csv.extend(file)
+
+    list_raw_csv = []
+    for (repertoire, sousRepertoires, file) in os.walk(path_raw_csv):
+        list_raw_csv.extend(file)
+
+    list_files = []
+    for (repertoire, sousRepertoires, file) in os.walk(path):
+        list_files.extend(file)
+
+    if "Dataset_Regression.csv" not in list_files or "Dataset_Classification.csv" not in list_files:
+
+        for file_name in list_csv:
+
+            csv_path = path_csv + "\\" + file_name
+            df_5band = pd.read_csv(csv_path, sep=";")
+
+            if df_total is None:
+                column_header = df_5band.columns
+                df_total = pd.DataFrame(columns=column_header)
+
+            df_total = pd.concat([df_total, df_5band], sort=False)
+
+        df_total.to_csv("..\\DataBase\\SEED-VIG\\Dataset_Regression.csv", sep=";", index=False)
+
+        for i, perclos in enumerate(df_total['perclos']):
+            if perclos < 0.3:
+                df_total['perclos'][i] = int(0)
+            elif perclos < 0.7:
+                df_total['perclos'][i] = int(1)
+            else :
+                df_total['perclos'][i] = int(2)
+
+        df_total.to_csv("..\\DataBase\\SEED-VIG\\Dataset_Classification.csv", sep=";", index=False)
+
+    if "Dataset_Raw.csv" not in list_files:
+        df_raw_total = None
+        for file_name in list_raw_csv:
+
+            file_raw_path = path_raw_csv + "\\" + file_name
+            df_raw = pd.read_csv(file_raw_path, sep=";")
+
+            if df_raw_total is None:
+                column_raw_header = df_raw.columns
+                df_raw_total = pd.DataFrame(columns=column_raw_header)
+
+            df_total = pd.concat([df_total, df_raw], sort=False)
+        df_total.to_csv("..\\DataBase\\SEED-VIG\\Dataset_Raw.csv", sep=";", index=False)
+
+
+
+def stat_study(file):
+
+    dataset = pd.read_csv(file, sep=";")
+    path = ".\\stat"
+
+    # On charge l'ensemble des fichiers .csv existant
+    list_file = []
+    for (repertoire, sousRepertoires, file) in os.walk(path):
+        list_file.extend(file)
+
+    if "numpy_stat.txt" in list_file:
+        os.remove(path+"\\numpy_stat.txt")
+        print("Stat deleted !")
+
+    file_object = open(path + '\\numpy_stat.txt', 'w')
+    print("\n------CALCUL DE LA MOYENNE DE CHAQUE COLONNE-----\n")
+    file_object.write("\n------CALCUL DE LA MOYENNE DE CHAQUE COLONNE-----\n")
+    for col in dataset.columns:
+        file_object.write("\n-------------" + col + "-------------")
+        file_object.write("\nMoyenne : " + str(round(np.mean(dataset[col]), 2)))
+        file_object.write("\nMediane : " + str(round(np.median(dataset[col]), 2)))
+        file_object.write("\nQ1 : " + str(round(np.percentile(dataset[col], 25))))
+        file_object.write("\nQ3  : " + str(round(np.percentile(dataset[col], 75))))
+        file_object.write("\nVariance : " + str(round(np.var(dataset[col]), 2)))
+        file_object.write("\nEcart type : " + str(round(np.std(dataset[col]), 2)) + "\n\n")
+        #sns.catplot(data=dataset, x='perclos', y=col, kind="box")
+        #plt.show()
+    file_object.close()
+    sns.displot(dataset['perclos'])
+    plt.savefig("Label Distribution.png")
+
+
+
+
+
+
