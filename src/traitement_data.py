@@ -138,7 +138,6 @@ def df_concat():
     path_raw_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
     path_csv = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv"
     path = "..\\DataBase\\SEED-VIG"
-    dict_df = {}
     df_total = None
 
     # On charge l'ensemble des fichiers .csv existant
@@ -227,7 +226,40 @@ def stat_study(file):
     plt.savefig("Label Distribution.png")
 
 
+def add_raw_label():
 
+    path_raw_csv = "../../Database/SEED-VIG/EEG_csv"
+    path_5band_csv = "../../Database/SEED-VIG/5Bands_Perclos_Csv"
+    path_raw_label = "../../Database/SEED-VIG/Raw_Data_Labelized/"
+
+    # On charge l'ensemble des fichiers .csv existant
+    list_raw_csv = []
+    for (repertoire, sousRepertoires, file) in os.walk(path_raw_csv):
+        list_raw_csv.extend(file)
+
+    list_raw_label = []
+    for (repertoire, sousRepertoires, file) in os.walk(path_raw_label):
+        list_raw_label.extend(file)
+
+    for file_name in list_raw_csv:
+
+        if file_name not in list_raw_label:
+            df_raw = pd.read_csv((path_raw_csv+"/"+file_name), sep=";")
+            df_band = pd.read_csv((path_5band_csv+"/"+file_name), sep=";")
+
+            label_columns = []
+
+            for i, perclos in enumerate(df_band['perclos']):
+                for j in range(0, 1600):
+                    if perclos < 0.3:
+                        label_columns.append(1)
+                    elif 0.3 < perclos < 0.7:
+                        label_columns.append(2)
+                    elif perclos > 0.7:
+                        label_columns.append(3)
+            df_raw = df_raw.assign(label=label_columns)
+            df_raw.to_csv(path_raw_label+file_name, sep=";", index=False)
+            print("{} created !".format(file_name))
 
 
 

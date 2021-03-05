@@ -59,26 +59,26 @@ def train_ml():
 
 
 def train_dl():
-
-    file_path = "..\\DataBase\\SEED-VIG\\Dataset_Raw.csv"
+    print("Training Deep learning")
+    file_path = "../../Database/SEED-VIG/Raw_Data_Labelized/1_20151124_noon_2.csv"
     dataset = pd.read_csv(file_path, sep=";")
 
-    X = dataset.drop(['perclos'], axis=1)
-    y = dataset['perclos']
+    x = dataset.drop(['label'], axis=1)
+    y = dataset['label']
 
     model = keras.models.Sequential()
-    model.add(Conv2D(filter=64, kernel_size=1, input_shape=(dataset.shape[1], dataset.shape[0], 1)))
+    model.add(Conv2D(filters=32, kernel_size=1, input_shape=(dataset.shape[1], dataset.shape[0], 1)))
     model.add(Flatten())
-    model.add(Dense(4))
+    model.add(Dense(1))
     model.summary()
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.SGD(lr=0.01),
                   metrics=['accuracy'])
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=42)
     model.fit(x_train, y_train,
-              epochs=10,
+              epochs=1,
               verbose=1,
               validation_data=(x_test, y_test),
-              callbacks=[history])
+              callbacks=['history'], batch_size=8)
