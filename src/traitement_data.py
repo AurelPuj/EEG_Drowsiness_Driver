@@ -197,7 +197,7 @@ def df_concat():
 def stat_study(file):
 
     dataset = pd.read_csv(file, sep=";")
-    path = ".\\stat"
+    #path = ".\\stat"
 
     # On charge l'ensemble des fichiers .csv existant
     list_file = []
