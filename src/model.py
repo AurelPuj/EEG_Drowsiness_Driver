@@ -17,10 +17,11 @@ from sklearn.linear_model import LinearRegression
 from traitement_data import df_5band, mat_to_df_raw_data
 import joblib
 import keras
-from keras.layers import Conv2D, Dense, Flatten
+from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D
 import tensorflow as tf
 import numpy as np
-import sklearn.preprocessing
+from sklearn.preprocessing import LabelBinarizer
+
 
 def train_ml():
 
@@ -65,7 +66,11 @@ def train_dl():
     dataset = pd.read_csv(file_path, sep=";")
 
     data = dataset.drop(['label'], axis=1).to_numpy()
-    label = dataset['label'].values.tolist()
+    label = dataset['label']
+    onehot = LabelBinarizer()
+    onehot.fit(label)
+    label = onehot.transform(label)
+
     y = []
     for i in range(885):
         y.append(label[i*1600])
@@ -73,27 +78,20 @@ def train_dl():
     X = data.reshape(885,1600,17,1)
     y = np.array(y)
 
-    label_binarizer = sklearn.preprocessing.LabelBinarizer()
-    label_binarizer.fit(range(max(y) + 1))
-    y = label_binarizer.transform(y)
-
     print(X.shape)
     print(y.shape)
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     model = keras.models.Sequential()
-    model.add(Conv2D(filters=32, kernel_size=1, input_shape=(1600,17,1)))
+    model.add(Conv2D(filters=64, kernel_size=2, input_shape=(1600,17,1)))
+    model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Flatten())
-    model.add(Dense())
+    model.add(Dense(128,activation='relu'))
+    model.add(Dense(3,activation='sigmoid'))
     model.summary()
 
     model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer=keras.optimizers.SGD(lr=0.01),
+                  optimizer='nadam',
                   metrics=['accuracy'])
 
-    model.fit(X, y,
-              epochs=1,
-              verbose=1,
-              validation_data=(x_test, y_test)
-              ,metric=['accuracy'])
-    history = model.fit(X, Y, validation_split=0.33, nb_epoch=150, batch_size=10, verbose=2)
+    history = model.fit(X, y, validation_split=0.2, epochs=10, batch_size=10, verbose=1)

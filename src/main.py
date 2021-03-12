@@ -31,4 +31,4 @@ if menu == '4':
 if menu == '5':
     add_raw_label()
 '''
-df_concat()
+train_dl()
