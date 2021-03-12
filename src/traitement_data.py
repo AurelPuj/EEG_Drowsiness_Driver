@@ -135,9 +135,9 @@ def df_5band():
 
 def df_concat():
 
-    path_raw_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
-    path_csv = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv"
-    path = "..\\DataBase\\SEED-VIG"
+    path_raw_csv = "../../Database/SEED-VIG/EEG_csv"
+    path_csv = "../../Database/SEED-VIG/5Bands_Perclos_Csv"
+    path = "../../Database/SEED-VIG"
     df_total = None
 
     # On charge l'ensemble des fichiers .csv existant
@@ -152,12 +152,15 @@ def df_concat():
     list_files = []
     for (repertoire, sousRepertoires, file) in os.walk(path):
         list_files.extend(file)
+    print(list_files)
+    print(list_raw_csv)
+    print(list_csv)
 
     if "Dataset_Regression.csv" not in list_files or "Dataset_Classification.csv" not in list_files:
 
         for file_name in list_csv:
 
-            csv_path = path_csv + "\\" + file_name
+            csv_path = path_csv + "/" + file_name
             df_5band = pd.read_csv(csv_path, sep=";")
 
             if df_total is None:
@@ -166,7 +169,7 @@ def df_concat():
 
             df_total = pd.concat([df_total, df_5band], sort=False)
 
-        df_total.to_csv("..\\DataBase\\SEED-VIG\\Dataset_Regression.csv", sep=";", index=False)
+        df_total.to_csv("../../Database/SEED-VIG/Dataset_Regression.csv", sep=";", index=False)
 
         for i, perclos in enumerate(df_total['perclos']):
             if perclos < 0.3:
@@ -176,13 +179,13 @@ def df_concat():
             else :
                 df_total['perclos'][i] = int(2)
 
-        df_total.to_csv("..\\DataBase\\SEED-VIG\\Dataset_Classification.csv", sep=";", index=False)
+        df_total.to_csv("../../Database/SEED-VIG/Dataset_Classification.csv", sep=";", index=False)
 
     if "Dataset_Raw.csv" not in list_files:
         df_raw_total = None
         for file_name in list_raw_csv:
 
-            file_raw_path = path_raw_csv + "\\" + file_name
+            file_raw_path = path_raw_csv + "/" + file_name
             df_raw = pd.read_csv(file_raw_path, sep=";")
 
             if df_raw_total is None:
@@ -190,7 +193,7 @@ def df_concat():
                 df_raw_total = pd.DataFrame(columns=column_raw_header)
 
             df_total = pd.concat([df_total, df_raw], sort=False)
-        df_total.to_csv("..\\DataBase\\SEED-VIG\\Dataset_Raw.csv", sep=";", index=False)
+        df_total.to_csv("../../Database/SEED-VIG/Dataset_Raw.csv", sep=";", index=False)
 
 
 
@@ -252,11 +255,11 @@ def add_raw_label():
             for i, perclos in enumerate(df_band['perclos']):
                 for j in range(0, 1600):
                     if perclos < 0.3:
-                        label_columns.append(1)
+                        label_columns.append(0)
                     elif 0.3 < perclos < 0.7:
-                        label_columns.append(2)
+                        label_columns.append(1)
                     elif perclos > 0.7:
-                        label_columns.append(3)
+                        label_columns.append(2)
             df_raw = df_raw.assign(label=label_columns)
             df_raw.to_csv(path_raw_label+file_name, sep=";", index=False)
             print("{} created !".format(file_name))
