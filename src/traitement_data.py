@@ -135,7 +135,7 @@ def df_5band():
 
 def df_concat():
 
-    path_raw_csv = "../../Database/SEED-VIG/EEG_csv"
+    path_raw_csv = "../../Database/SEED-VIG/Raw_Data_Labelized"
     path_csv = "../../Database/SEED-VIG/5Bands_Perclos_Csv"
     path = "../../Database/SEED-VIG"
     df_total = None
