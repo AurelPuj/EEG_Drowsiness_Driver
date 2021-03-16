@@ -94,4 +94,4 @@ def train_dl():
                   optimizer='nadam',
                   metrics=['accuracy'])
 
-    history = model.fit(X, y, validation_split=0.2, epochs=1, batch_size=2, verbose=1)
+    history = model.fit(X, y, validation_split=0.2, epochs=20, batch_size=32, verbose=1)
