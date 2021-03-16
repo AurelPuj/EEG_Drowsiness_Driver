@@ -14,7 +14,7 @@ Shanghai Jiao Tong University, China
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from traitement_data import df_5band, mat_to_df_raw_data
+from data_process import df_5band, mat_to_df_raw_data
 import joblib
 import keras
 from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D
@@ -75,7 +75,7 @@ def train_dl():
     for i in range(885):
         y.append(label[i*1600])
 
-    X = data.reshape(885,1600,17,1)
+    X = data.reshape(885, 1600, 17, 1)
     y = np.array(y)
 
     print(X.shape)
