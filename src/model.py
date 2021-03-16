@@ -21,7 +21,7 @@ from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D
 import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
-
+import matplotlib.pyplot as plt
 
 def train_ml():
 
@@ -61,37 +61,48 @@ def train_ml():
 
 
 def train_dl():
+
+    tf.config.experimental.set_memory_growth
     print("Training Deep learning")
-    file_path = "../../Database/SEED-VIG/Raw_Data_Labelized/1_20151124_noon_2.csv"
+    file_path = "../../Database/SEED-VIG/psdRaw.csv"
     dataset = pd.read_csv(file_path, sep=";")
 
     data = dataset.drop(['label'], axis=1).to_numpy()
-    label = dataset['label']
+    label = dataset['label'].to_numpy()
+
     onehot = LabelBinarizer()
     onehot.fit(label)
-    label = onehot.transform(label)
+    y = onehot.transform(label)
 
-    y = []
-    for i in range(885):
-        y.append(label[i*1600])
+    print(data.shape)
+    print(y)
 
-    X = data.reshape(885, 1600, 17, 1)
+    X = data.reshape(20355, 1, 85, 1)
     y = np.array(y)
 
     print(X.shape)
     print(y.shape)
 
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    #x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     model = keras.models.Sequential()
-    model.add(Conv2D(filters=64, kernel_size=2, input_shape=(1600,17,1)))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Conv2D(filters=32, kernel_size=1, input_shape=(1,85,1)))
+    model.add(MaxPooling2D(pool_size=(1,1)))
+    model.add(Conv2D(filters=64, kernel_size=1))
+    model.add(MaxPooling2D(pool_size=(1, 1)))
+    model.add(Conv2D(filters=128, kernel_size=1))
+    model.add(MaxPooling2D(pool_size=(1, 1)))
     model.add(Flatten())
     model.add(Dense(128,activation='relu'))
     model.add(Dense(3,activation='sigmoid'))
     model.summary()
 
     model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer='nadam',
+                  optimizer='adam',
                   metrics=['accuracy'])
 
-    history = model.fit(X, y, validation_split=0.2, epochs=10, batch_size=10, verbose=1)
+    history = model.fit(X, y, validation_split=0.3, epochs=100, batch_size=128, verbose=1)
+    plt.plot(history.history['accuracy'])
+    plt.show()
+    plt.figure()
+    plt.plot(history.history['loss'])
+    plt.show()
