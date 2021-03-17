@@ -17,7 +17,7 @@ from sklearn.linear_model import LinearRegression
 from data_process import df_5band, mat_to_df_raw_data
 import joblib
 import keras
-from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D
+from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D, Conv1D, MaxPooling1D
 import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
@@ -77,7 +77,7 @@ def train_dl():
     print(data.shape)
     print(y)
 
-    X = data.reshape(20355, 1, 85, 1)
+    X = data.reshape(20355, 1, 170)
     y = np.array(y)
 
     print(X.shape)
@@ -85,23 +85,34 @@ def train_dl():
 
     #x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     model = keras.models.Sequential()
-    model.add(Conv2D(filters=32, kernel_size=1, input_shape=(1,85,1)))
-    model.add(MaxPooling2D(pool_size=(1,1)))
-    model.add(Conv2D(filters=64, kernel_size=1))
-    model.add(MaxPooling2D(pool_size=(1, 1)))
-    model.add(Conv2D(filters=128, kernel_size=1))
-    model.add(MaxPooling2D(pool_size=(1, 1)))
+    model.add(Conv1D(filters=32, kernel_size=1, input_shape=(1,170)))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.25))
+
+    model.add(Conv1D(filters=64, kernel_size=1))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.25))
+
+    model.add(Conv1D(filters=128, kernel_size=1))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.25))
+
     model.add(Flatten())
-    model.add(Dense(128,activation='relu'))
-    model.add(Dense(3,activation='sigmoid'))
+
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.1))
+    model.add(Dense(3, activation='sigmoid'))
+
     model.summary()
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    history = model.fit(X, y, validation_split=0.3, epochs=100, batch_size=128, verbose=1)
-    plt.plot(history.history['accuracy'])
+    history = model.fit(X, y, validation_split=0.3, epochs=20, verbose=1)
+    plt.plot(history.history['val_accuracy'])
     plt.show()
     plt.figure()
     plt.plot(history.history['loss'])

@@ -7,7 +7,6 @@ from scipy.signal import welch
 from scipy.integrate import simps
 from mne.time_frequency import psd_array_multitaper
 import pandas as pd
-import pyeeg
 import numpy
 
 

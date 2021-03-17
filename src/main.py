@@ -31,7 +31,7 @@ if menu == '4':
 if menu == '5':
     add_raw_label()
 if menu == '6':
-    file_path = "../../Database/SEED-VIG/Raw_Data_Labelized/1_20151124_noon_2.csv"
+    file_path = "../../Database/SEED-VIG/Dataset_Raw.csv"
     dataset = pd.read_csv(file_path, sep=";")
     process(dataset)
 
