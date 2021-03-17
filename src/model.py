@@ -17,7 +17,7 @@ from sklearn.linear_model import LinearRegression
 from traitement_data import df_5band, mat_to_df_raw_data
 import joblib
 import keras
-from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D
+from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D, Conv1D, MaxPooling1D
 import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
@@ -81,7 +81,7 @@ def train_dl():
     onehot.fit(label)
     label = onehot.transform(label)
 
-    X = data.reshape(-1, 1600, 17, 1)
+    X = data.reshape(-1, 1600, 17)
     y = []
 
     for i in range(X.shape[0]):
@@ -93,14 +93,14 @@ def train_dl():
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     model = keras.models.Sequential()
-    model.add(Conv2D(filters=32, kernel_size=2, input_shape=(1600,17,1), activation ='relu'))
-    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Conv1D(filters=32, kernel_size=2, input_shape=(1600,17), activation ='relu'))
+    model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout(0.25))
-    model.add(Conv2D(filters=64, kernel_size=2, activation ='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv1D(filters=64, kernel_size=2, activation ='relu'))
+    model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout(0.25))
-    model.add(Conv2D(filters=128, kernel_size=2, activation ='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv1D(filters=128, kernel_size=2, activation ='relu'))
+    model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout(0.25))
     model.add(Flatten())
     '''model.add(Dense(128,activation='relu'))
@@ -111,7 +111,7 @@ def train_dl():
     model.add(Dropout(0.25))
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.1))
-    model.add(Dense(3, activation='softmax'))
+    model.add(Dense(3, activation='sigmoid'))
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer='adam',
