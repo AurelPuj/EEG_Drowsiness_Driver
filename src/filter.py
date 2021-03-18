@@ -192,10 +192,12 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
     return bp
 
 def filter(data):
+
     '''
     plt.figure()
     plt.plot(data)
     '''
+
     fs = 400
     nyq = 0.5*fs
     cutoff = 2
@@ -206,13 +208,17 @@ def filter(data):
 
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     y_low = signal.filtfilt(b, a, data)
-    #plt.plot(y_low)
+    '''
+    plt.plot(y_low)
 
     b, a = butter(order, [low, high], btype='bandpass', analog=False)
     y_band = signal.filtfilt(b, a, y_low)
-    #plt.plot(y_band)
-    #plt.show()
-    return y_band
+    plt.plot(y_band)
+    plt.show()
+
+    '''
+
+    return y_low
 
 
 def process(dataset):
@@ -264,7 +270,7 @@ def process(dataset):
                 data[c].append(dataset[c][i*1600])
 
         df = pd.DataFrame(data)
-        df.to_csv("../../Database/SEED-VIG/psdRaw.csv", sep=";", index=False)
+        df.to_csv("../../Database/SEED-VIG/psdDeRaw.csv", sep=";", index=False)
 
 
 

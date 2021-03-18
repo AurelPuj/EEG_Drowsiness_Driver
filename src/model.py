@@ -22,6 +22,10 @@ import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 import matplotlib.pyplot as plt
+from tensorflow.keras.optimizers import SGD
+from sklearn.model_selection import GridSearchCV
+from keras.wrappers.scikit_learn import KerasClassifier
+from keras import backend as K
 
 def train_ml():
 
@@ -59,12 +63,44 @@ def train_ml():
     model_columns = list(X.columns)
     joblib.dump(model_columns, './api/models/columns.pkl')
 
+def create_model(optimizer='adam'):
+
+    K.clear_session()
+
+    model = keras.models.Sequential()
+    model.add(Conv1D(filters=32, kernel_size=1, input_shape=(1, 170), activation='relu', padding='same'))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.7))
+
+    model.add(Conv1D(filters=64, kernel_size=1, activation='relu', padding='same'))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.7))
+
+    model.add(Conv1D(filters=128, kernel_size=1, activation='relu', padding='same'))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.7))
+
+    model.add(Flatten())
+
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.7))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.1))
+    model.add(Dense(3, activation='softmax'))
+
+    model.summary()
+
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer=optimizer,
+                  metrics=['accuracy'])
+    return model
 
 def train_dl():
 
     tf.config.experimental.set_memory_growth
+
     print("Training Deep learning")
-    file_path = "../../Database/SEED-VIG/psdRaw.csv"
+    file_path = "../../Database/SEED-VIG/psdDeRaw.csv"
     dataset = pd.read_csv(file_path, sep=";")
 
     data = dataset.drop(['label'], axis=1).to_numpy()
@@ -84,36 +120,19 @@ def train_dl():
     print(y.shape)
 
     #x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-    model = keras.models.Sequential()
-    model.add(Conv1D(filters=32, kernel_size=1, input_shape=(1,170)))
-    model.add(MaxPooling1D(pool_size=1))
-    model.add(Dropout(0.25))
 
-    model.add(Conv1D(filters=64, kernel_size=1))
-    model.add(MaxPooling1D(pool_size=1))
-    model.add(Dropout(0.25))
+    model = KerasClassifier(build_fn=create_model, epochs=10, verbose=1)
 
-    model.add(Conv1D(filters=128, kernel_size=1))
-    model.add(MaxPooling1D(pool_size=1))
-    model.add(Dropout(0.25))
 
-    model.add(Flatten())
-
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.25))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.1))
-    model.add(Dense(3, activation='sigmoid'))
-
-    model.summary()
-
-    model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer='adam',
-                  metrics=['accuracy'])
-
-    history = model.fit(X, y, validation_split=0.3, epochs=20, verbose=1)
+    optimizer = ['SGD', 'adam']
+    param_grid = dict(optimizer=optimizer)
+    grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=-1, cv=3, scoring='accuracy')
+    grid_result = grid.fit(X, y)
+    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+'''
+    history = model.fit(X, y, validation_split=0.3, epochs=30, verbose=1)
     plt.plot(history.history['val_accuracy'])
     plt.show()
     plt.figure()
-    plt.plot(history.history['loss'])
-    plt.show()
+    plt.plot(history.history['val_loss'])
+    plt.show()'''

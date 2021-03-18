@@ -14,7 +14,6 @@ Shanghai Jiao Tong University, China
 from data_process import df_concat, df_5band, stat_study, add_raw_label
 from model import train_ml, train_dl
 from filter import process
-import tensorflow as tf
 import pandas as pd
 
 menu = input("-------------------Menu-------------------\n1: étude stat \n2: Créer csv complet\n3: Entrainer ML\n"
