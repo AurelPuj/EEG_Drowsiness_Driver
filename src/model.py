@@ -121,18 +121,35 @@ def train_dl():
 
     #x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    model = KerasClassifier(build_fn=create_model, epochs=10, verbose=1)
+    model = keras.models.Sequential()
+    model.add(Conv1D(filters=32, kernel_size=1, input_shape=(1, 170), activation='relu', padding='same'))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.7))
 
+    model.add(Conv1D(filters=64, kernel_size=1, activation='relu', padding='same'))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.7))
 
-    optimizer = ['SGD', 'adam']
-    param_grid = dict(optimizer=optimizer)
-    grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=-1, cv=3, scoring='accuracy')
-    grid_result = grid.fit(X, y)
-    print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-'''
+    model.add(Conv1D(filters=128, kernel_size=1, activation='relu', padding='same'))
+    model.add(MaxPooling1D(pool_size=1))
+    model.add(Dropout(0.7))
+
+    model.add(Flatten())
+
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.7))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.1))
+    model.add(Dense(3, activation='softmax'))
+
+    model.summary()
+
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                  optimizer='adam',
+                  metrics=['accuracy'])
     history = model.fit(X, y, validation_split=0.3, epochs=30, verbose=1)
     plt.plot(history.history['val_accuracy'])
     plt.show()
     plt.figure()
     plt.plot(history.history['val_loss'])
-    plt.show()'''
+    plt.show()
