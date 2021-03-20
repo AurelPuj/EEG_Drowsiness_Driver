@@ -208,17 +208,34 @@ def filter(data):
 
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     y_low = signal.filtfilt(b, a, data)
-    '''
-    plt.plot(y_low)
+
+    #plt.plot(y_low)
 
     b, a = butter(order, [low, high], btype='bandpass', analog=False)
     y_band = signal.filtfilt(b, a, y_low)
-    plt.plot(y_band)
-    plt.show()
+    '''plt.plot(y_band)
+    plt.show()'''
 
-    '''
 
-    return y_low
+
+    return y_band
+
+def filter_raw(dataset):
+
+    data = {}
+
+    for c in dataset.columns:
+        if c != 'label':
+
+            print("-----------{}-----------".format(c))
+            data[c] = filter(dataset[c])
+
+        else:
+            data[c] = dataset[c]
+
+
+        df = pd.DataFrame(data)
+        df.to_csv("../../Database/SEED-VIG/filterRaw.csv", sep=";", index=False)
 
 
 def process(dataset):

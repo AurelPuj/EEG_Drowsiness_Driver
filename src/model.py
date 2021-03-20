@@ -14,7 +14,7 @@ Shanghai Jiao Tong University, China
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from traitement_data import df_5band, mat_to_df_raw_data
+from data_process import df_5band, mat_to_df_raw_data
 import joblib
 import keras
 from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D, Conv1D, MaxPooling1D
@@ -61,6 +61,8 @@ def train_ml():
 
 
 def train_dl():
+    from sklearn.metrics import classification_report, plot_confusion_matrix, confusion_matrix
+    import seaborn as sn
 
     tf.compat.v1.disable_v2_behavior()
     gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -72,7 +74,7 @@ def train_dl():
             print(e)
 
     print("Training Deep learning")
-    file_path = "../../Database/SEED-VIG/Dataset_Raw.csv"
+    file_path = "../../Database/SEED-VIG/filterRaw.csv"
     dataset = pd.read_csv(file_path, sep=";")
 
     data = dataset.drop(['label'], axis=1).to_numpy()
@@ -91,7 +93,7 @@ def train_dl():
     print(X.shape)
     print(y.shape)
 
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     model = keras.models.Sequential()
     model.add(Conv1D(filters=32, kernel_size=2, input_shape=(1600,17), activation ='relu'))
     model.add(MaxPooling1D(pool_size=2))
@@ -103,21 +105,39 @@ def train_dl():
     model.add(MaxPooling1D(pool_size=2))
     model.add(Dropout(0.25))
     model.add(Flatten())
-    '''model.add(Dense(128,activation='relu'))
-    model.add(Dense(3,activation='sigmoid'))
-    model.summary()
-    '''
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.25))
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.1))
-    model.add(Dense(3, activation='sigmoid'))
+    model.add(Dense(3, activation='softmax'))
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer='adam',
                   metrics=['accuracy'])
 
-    history = model.fit(X, y, validation_split=0.3, epochs=100, batch_size=128, verbose=1)
+    '''history = model.fit(X, y, validation_split=0.2, epochs=40, batch_size=256, verbose=1)
+    plt.figure()
     plt.plot(history.history['val_acc'])
+    plt.plot(history.history['loss'])
+    plt.show()'''
+
+    history = model.fit(x_train, y_train, epochs=12, batch_size=256, verbose=1)
+    y_pred = model.predict(x_test, batch_size=256, verbose=1)
+    y_pred = np.argmax(y_pred, axis=1)
+    y_test = np.argmax(y_test, axis=1)
+    print(classification_report(y_test, y_pred))
+
+    cm = confusion_matrix(y_test, y_pred)
+    df_cm = pd.DataFrame(cm, range(3), range(3))
+    # plt.figure(figsize=(10,7))
+    sn.set(font_scale=1.1)  # for label size
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})  # font size
+    plt.xlabel("Predictions")
+    plt.ylabel("True labels")
+
+    plt.show()
+
+    plt.figure()
+    plt.plot(history.history['acc'])
     plt.plot(history.history['loss'])
     plt.show()
