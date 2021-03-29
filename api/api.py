@@ -14,6 +14,9 @@ import pandas as pd
 import joblib
 from flask_pymongo import PyMongo
 import pickle
+import sys
+import keras
+from filter import filter
 
 # Create API and load ML Algo
 app = Flask("MyEEG")
@@ -33,14 +36,17 @@ for (repertoire, sousRepertoires, file) in os.walk(path_model):
 db.model.drop()
 
 for file_plk in list_model:
-    if file_plk != 'columns.pkl':
-        model = joblib.load(path_model+file_plk)
+    if file_plk != 'columns.pkl' and file_plk != 'DL_CNNLSTM.h5' and file_plk != 'DL_CNNLSTMweights.h5':
+        '''model = joblib.load(path_model+file_plk)
         plk_model = pickle.dumps(model)
         model_name = file_plk.replace(".pkl", "")
-        db.model.insert_one({model_name: plk_model, 'name': model_name})
+        db.model.insert_one({model_name: plk_model, 'name': model_name})'''
+    elif file_plk == 'DL_CNNLSTM.h5':
+        deep_model = keras.models.load_model(path_model+file_plk)
+        deep_model.load_weights(path_model+"DL_CNNLSTMweights.h5")
     else:
-        columns = joblib.load(path_model+file_plk)
-        db.model.insert_one({file_plk.replace(".pkl", ""): columns, 'name': file_plk.replace(".pkl", "")})
+        '''columns = joblib.load(path_model+file_plk)
+        db.model.insert_one({file_plk.replace(".pkl", ""): columns, 'name': file_plk.replace(".pkl", "")})'''
 
 
 @app.route('/predict', methods=['POST'])  # Your API endpoint URL would consist /predict
@@ -68,6 +74,24 @@ def predict():
 
     prediction = list(model_loaded.predict(query))
     return jsonify({'prediction': prediction})
+
+@app.route('/predictdl', methods=['POST'])  # Your API endpoint URL would consist /predict
+def predictdl():
+
+    json = request.json
+    query = pd.get_dummies(pd.DataFrame(json))
+    query = query.head(13641600).to_numpy().reshape(-1, 4, 1, 400, 8)
+    prediction = deep_model.predict(query)
+    max_prediction = max(enumerate(prediction[0]), key=(lambda x: x[1]))
+
+    if max_prediction[0] == 0:
+        message = "Awake"
+    if max_prediction[0] == 1:
+        message = "Falling in sleep"
+    if max_prediction[0] == 2:
+        message = "Sleep"
+
+    return "{}".format(prediction.round())
 
 
 @app.route("/")

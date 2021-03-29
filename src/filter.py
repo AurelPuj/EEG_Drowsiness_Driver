@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
-from scipy.signal import butter, lfilter
+from scipy.signal import butter
 from scipy import signal
 import numpy as np
-from scipy.integrate import simps
-from scipy.signal import welch
+from scipy.signal import welch, resample
 from scipy.integrate import simps
 from mne.time_frequency import psd_array_multitaper
 import pandas as pd
@@ -11,6 +10,7 @@ import numpy
 
 
 def bin_power(X, Band, Fs):
+
     """Compute power in each frequency bin specified by Band from FFT result of
     X. By default, X is a real signal.
 
@@ -73,6 +73,7 @@ def bin_power(X, Band, Fs):
 
 
 def spectral_entropy(X, Band, Fs, Power_Ratio=None):
+
     """Compute spectral entropy of a time series from either two cases below:
     1. X, the time series (default)
     2. Power_Ratio, a list of normalized signal power in a set of frequency
@@ -129,11 +130,12 @@ def spectral_entropy(X, Band, Fs, Power_Ratio=None):
         Spectral_Entropy += Power_Ratio[i] * numpy.log(Power_Ratio[i])
     Spectral_Entropy /= numpy.log(
         len(Power_Ratio)
-    )  # to save time, minus one is omitted
+    )
     return -1 * Spectral_Entropy
 
 
 def bandpower(data, band, method='welch', window_sec=None, relative=False):
+
     """Compute the average power of the signal x in a specific frequency band.
 
     Requires MNE-Python >= 0.14.
@@ -160,7 +162,8 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
     bp : float
       Absolute or relative band power.
     """
-    fs = 400
+
+    fs = 200
 
     band = np.asarray(band)
     low, high = band
@@ -191,14 +194,8 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
         bp /= simps(psd, dx=freq_res)
     return bp
 
-def filter(data):
+def filter(data, fs):
 
-    '''
-    plt.figure()
-    plt.plot(data)
-    '''
-
-    fs = 400
     nyq = 0.5*fs
     cutoff = 2
     order = 2
@@ -209,14 +206,8 @@ def filter(data):
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     y_low = signal.filtfilt(b, a, data)
 
-    #plt.plot(y_low)
-
     b, a = butter(order, [low, high], btype='bandpass', analog=False)
     y_band = signal.filtfilt(b, a, y_low)
-    '''plt.plot(y_band)
-    plt.show()'''
-
-
 
     return y_band
 
@@ -228,66 +219,128 @@ def filter_raw(dataset):
         if c != 'label':
 
             print("-----------{}-----------".format(c))
-            data[c] = filter(dataset[c])
+            data[c] = filter(dataset[c], 400)
 
         else:
+            print("-----------{}-----------".format(c))
             data[c] = dataset[c]
 
 
-        df = pd.DataFrame(data)
-        df.to_csv("../../Database/SEED-VIG/filterRaw.csv", sep=";", index=False)
+    df = pd.DataFrame(data)
+    df.to_csv("../../Database/SEED-VIG/filterRaw.csv", sep=";", index=False)
 
+
+def psd_raw(dataset):
+    data = {}
+    label = {}
+    len_data = round(dataset.shape[0]/800)
+    print(len(dataset['label']))
+
+    for c in dataset.columns:
+        if c != 'label':
+            data[c] = []
+            for i in range(0, len_data):
+                sig = filter(dataset[c][i*800:(i+1)*800])
+                freq, psd = signal.welch(sig)
+                print(len(psd))
+                data[c] = [*data[c], *psd]
+
+            print("-----------{}-----------".format(c))
+
+        else:
+            label[c] = []
+            for i in range(0, len_data):
+                label[c].append(dataset[c][i * 800])
+
+        '''df = pd.DataFrame(data)
+        df.to_csv("../../Database/SEED-VIG/psdRaw.csv", sep=";", index=False)
+        df_label = pd.DataFrame(label)
+        df_label.to_csv("../../Database/SEED-VIG/labelRaw.csv", sep=";", index=False)'''
 
 def process(dataset):
 
     data = {}
-    len_data = round(dataset.shape[0]/1600)
 
     for c in dataset.columns:
         if c != 'label':
 
             print("-----------{}-----------".format(c))
             data[c+'_psd_delta'] = []
-            data[c+'_se_delta'] = []
+            data[c + '_se_delta'] = []
 
             data[c+'_psd_theta'] = []
-            data[c+'_se_theta'] = []
+            data[c + '_se_theta'] = []
 
             data[c+'_psd_alpha'] = []
-            data[c+'_se_alpha'] = []
+            data[c + '_se_alpha'] = []
 
             data[c+'_psd_beta'] = []
-            data[c+'_se_beta'] = []
+            data[c + '_se_beta'] = []
 
-            data[c+'_psd_gamma'] = []
+            data[c + '_psd_gamma'] = []
             data[c+'_se_gamma'] = []
 
+            secs = dataset[c].shape[0] / 400
+            samps = int(secs * 200)
+            signal_resample = resample(dataset[c].to_numpy(), samps)
+            len_data = round(len(signal_resample) / 800)
+            signal = pd.Series(filter(signal_resample))
+            signal_ma = signal.rolling(window=3).mean()
+            signal_ma[0] = signal[0]
+            signal_ma[1] = signal[1]
+            signal_ma = signal_ma.to_numpy()
 
             for i in range(0,len_data):
 
-                signal = filter(dataset[c][i*1600:(i+1)*1600])
-                data[c+'_psd_delta'].append(bandpower(signal, [0.5, 4], 'welch'))
-                data[c+'_se_delta'].append(spectral_entropy(signal, range(1, 4), 400))
+                data[c+'_psd_delta'].append(bandpower(signal_ma[i * 800:(i + 1) * 800], [0.5, 4], 'welch'))
+                data[c+'_se_delta'].append(spectral_entropy(signal_ma[i * 800:(i + 1) * 800], range(1, 4), 200))
 
-                data[c + '_psd_theta'].append(bandpower(signal, [4, 8], 'welch'))
-                data[c+'_se_theta'].append(spectral_entropy(signal, range(4, 8), 400))
+                data[c + '_psd_theta'].append(bandpower(signal_ma[i * 800:(i + 1) * 800], [4, 8], 'welch'))
+                data[c+'_se_theta'].append(spectral_entropy(signal_ma[i * 800:(i + 1) * 800], range(4, 8), 200))
 
-                data[c+'_psd_alpha'].append(bandpower(signal, [8, 14], 'welch'))
-                data[c+'_se_alpha'].append(spectral_entropy(signal, range(8, 14), 400))
+                data[c+'_psd_alpha'].append(bandpower(signal_ma[i * 800:(i + 1) * 800], [8, 14], 'welch'))
+                data[c+'_se_alpha'].append(spectral_entropy(signal_ma[i * 800:(i + 1) * 800], range(8, 14), 200))
 
-                data[c+'_psd_beta'].append(bandpower(signal, [14, 31], 'welch'))
-                data[c+'_se_beta'].append(spectral_entropy(signal, range(14, 31), 400))
+                data[c+'_psd_beta'].append(bandpower(signal_ma[i * 800:(i + 1) * 800], [14, 31], 'welch'))
+                data[c+'_se_beta'].append(spectral_entropy(signal_ma[i * 800:(i + 1) * 800], range(14, 31), 200))
 
-                data[c+'_psd_gamma'].append(bandpower(signal, [31, 50], 'welch'))
-                data[c+'_se_gamma'].append(spectral_entropy(signal, range(31, 50), 400))
-
+                data[c+'_psd_gamma'].append(bandpower(signal_ma[i * 800:(i + 1) * 800], [31, 50], 'welch'))
+                data[c+'_se_gamma'].append(spectral_entropy(signal_ma[i * 800:(i + 1) * 800], range(31, 50), 200))
         else:
             data[c] = []
             for i in range(0,len_data):
                 data[c].append(dataset[c][i*1600])
 
-        df = pd.DataFrame(data)
-        df.to_csv("../../Database/SEED-VIG/psdDeRaw.csv", sep=";", index=False)
+    df = pd.DataFrame(data)
+    print(df)
+    df.to_csv("../../Database/SEED-VIG/dataset.csv", sep=";", index=False)
+
+
+def process_bpci_data(dataset):
+
+    data = {}
+    print(dataset)
+
+    data['FT7']=dataset['Channel1']
+    data['FT8'] = dataset['Channel2']
+    data['T7'] = dataset['Channel3']
+    data['CP1'] = dataset['Channel4']
+    data['CP2'] = dataset['Channel5']
+    data['T8'] = dataset['Channel6']
+    data['O2'] = dataset['Channel7']
+    data['O1'] = dataset['Channel8']
+
+    for k in data.keys():
+        secs = data[k].shape[0] / 250
+        samps = int(secs * 400)
+        signal_resample = resample(data[k].to_numpy(), samps)
+        signal = pd.Series(filter(signal_resample,400))
+        data[k] = signal
 
 
 
+    df = pd.DataFrame(data)
+    print(df)
+    df.head(1600*20).to_json("../../Database/SEED-VIG/test.json")
+
+    df.to_csv("../../Database/SEED-VIG/test.csv", sep=";", index=False)

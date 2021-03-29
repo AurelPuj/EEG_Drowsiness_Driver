@@ -1,0 +1,2 @@
+model_checkpoint_path: "DL_CNNLSTMweights.json"
+all_model_checkpoint_paths: "DL_CNNLSTMweights.json"

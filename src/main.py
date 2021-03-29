@@ -13,11 +13,16 @@ Shanghai Jiao Tong University, China
 
 from data_process import df_concat, df_5band, stat_study, add_raw_label
 from model import train_ml, train_dl
-from filter import process, filter_raw
+from filter import process, filter_raw, psd_raw, process_bpci_data
 import pandas as pd
+from pyOpenBCI import OpenBCICyton
+import requests
+import json
 
 menu = input("-------------------Menu-------------------\n1: étude stat \n2: Créer csv complet\n3: Entrainer ML\n"
-             "4: Entrainer DL\n5: Créer Raw + Label\n6: Process signal\n7: Filter Raw\nChoix :    ")
+             "4: Entrainer DL\n5: Créer Raw + Label\n6: Process signal\n7: Filter Raw\n8: psd Raw\n"
+             "9: Autoencoder\nChoix :    ")
+
 print(menu)
 if menu == '1':
     stat_study("../../Database/SEED-VIG/Dataset_Classification.csv")
@@ -37,9 +42,25 @@ if menu == '7':
     file_path = "../../Database/SEED-VIG/Dataset_Raw.csv"
     dataset = pd.read_csv(file_path, sep=";")
     filter_raw(dataset)
+if menu == '8':
 
-'''
-file_path = "../../Database/SEED-VIG/5Bands_Perclos_Csv/1_20151124_noon_2.csv"
-dataset = pd.read_csv(file_path, sep=";")
-print(dataset["FT7_delta_psd_LDS"][0])
-'''
+    psd_raw(dataset)
+
+
+def print_raw(sample):
+    print(sample.channels_data)
+
+
+if menu == '9':
+    board = OpenBCICyton(port=None, daisy=False)
+    board.start_stream(print_raw)
+
+if menu == '10':
+    file_path = "../../Database/SEED-VIG/data/eeg.csv"
+    dataset = pd.read_csv(file_path, sep=",")
+    process_bpci_data(dataset)
+
+if menu =='11':
+    with open('../../Database/SEED-VIG/test.json') as json_data:
+        data_dict = json.load(json_data)
+        print(requests.post('http://0.0.0.0:5000/predictdl', json=data_dict).text)

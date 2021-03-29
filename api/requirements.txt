@@ -4,3 +4,9 @@ joblib
 sklearn
 flask_pymongo
 pymongo
+keras
+tensorflow
+matplotlib
+mne
+scipy
+numpy

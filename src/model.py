@@ -17,11 +17,15 @@ from sklearn.linear_model import LinearRegression
 from data_process import df_5band, mat_to_df_raw_data
 import joblib
 import keras
-from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D, Conv1D, MaxPooling1D
+from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D, Conv1D, MaxPooling1D, ConvLSTM2D,\
+    TimeDistributed, LSTM, Bidirectional, UpSampling2D, BatchNormalization
 import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 import matplotlib.pyplot as plt
+from imblearn.over_sampling import ADASYN
+import pickle
+
 
 def train_ml():
 
@@ -76,53 +80,59 @@ def train_dl():
     print("Training Deep learning")
     file_path = "../../Database/SEED-VIG/filterRaw.csv"
     dataset = pd.read_csv(file_path, sep=";")
+    sleep_data = dataset[dataset['label'] == 2]
 
-    data = dataset.drop(['label'], axis=1).to_numpy()
+    noise_data = sleep_data+np.random.normal(0, .1, sleep_data.shape)
+    noise_data['label'] = 2
+    dataset = pd.concat([dataset,noise_data], ignore_index=True)
+
+    awake_data = dataset[dataset['label'] == 0]
+    noise_data = awake_data + np.random.normal(0, .1, awake_data.shape)
+    noise_data['label'] = 0
+    dataset = pd.concat([dataset, noise_data], ignore_index=True)
+
+    data = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1']]
+    print(data.columns)
+    data = data.to_numpy()
     label = dataset['label']
     onehot = LabelBinarizer()
     onehot.fit(label)
     label = onehot.transform(label)
 
-    X = data.reshape(-1, 1600, 17)
+    print(data.shape)
+
+    X = data.reshape(-1, 4, 1, 400, 8)
     y = []
 
     for i in range(X.shape[0]):
-        y.append(label[i*1600])
+        y.append(label[i * 1600])
     y = np.array(y)
 
-    print(X.shape)
-    print(y.shape)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
+
     model = keras.models.Sequential()
-    model.add(Conv1D(filters=32, kernel_size=2, input_shape=(1600,17), activation ='relu'))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Dropout(0.25))
-    model.add(Conv1D(filters=64, kernel_size=2, activation ='relu'))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Dropout(0.25))
-    model.add(Conv1D(filters=128, kernel_size=2, activation ='relu'))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Dropout(0.25))
+    model.add(ConvLSTM2D(filters=128, kernel_size=(1,1), activation='relu', padding = "same",  input_shape=(4, 1, 400, 8)))
+    model.add(BatchNormalization())
+    model.add(Conv2D(filters=64, kernel_size=(1,1), activation='relu', padding = "same"))
+    model.add(Dropout(0.4))
+    model.add(MaxPooling2D(pool_size=(1,1)))
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.25))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.1))
     model.add(Dense(3, activation='softmax'))
 
-    model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer='adam',
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='nadam',
                   metrics=['accuracy'])
 
-    '''history = model.fit(X, y, validation_split=0.2, epochs=40, batch_size=256, verbose=1)
-    plt.figure()
-    plt.plot(history.history['val_acc'])
-    plt.plot(history.history['loss'])
-    plt.show()'''
+    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), batch_size=128, epochs=100, callbacks=[callback], verbose=1)
 
-    history = model.fit(x_train, y_train, epochs=12, batch_size=256, verbose=1)
-    y_pred = model.predict(x_test, batch_size=256, verbose=1)
+    model.save("../api/models/DL_CNNLSTM.h5")
+    model.save_weights("../api/models/DL_CNNLSTMweights.h5")
+
+
+    y_pred = model.predict(x_test, verbose=1)
     y_pred = np.argmax(y_pred, axis=1)
     y_test = np.argmax(y_test, axis=1)
     print(classification_report(y_test, y_pred))
