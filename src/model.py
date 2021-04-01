@@ -17,14 +17,14 @@ from sklearn.linear_model import LinearRegression
 from data_process import df_5band, mat_to_df_raw_data
 import joblib
 import keras
-from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D, Conv1D, MaxPooling1D, ConvLSTM2D,\
-    TimeDistributed, LSTM, Bidirectional, UpSampling2D, BatchNormalization
+from keras.layers import Conv2D, Dense, Flatten, Dropout, MaxPooling2D, ConvLSTM2D, BatchNormalization
 import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
 import matplotlib.pyplot as plt
-from imblearn.over_sampling import ADASYN
-import pickle
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn.svm import SVC
 
 
 def train_ml():
@@ -80,7 +80,7 @@ def train_dl():
     print("Training Deep learning")
     file_path = "../../Database/SEED-VIG/filterRaw.csv"
     dataset = pd.read_csv(file_path, sep=";")
-    sleep_data = dataset[dataset['label'] == 2]
+    '''sleep_data = dataset[dataset['label'] == 2]
 
     noise_data = sleep_data+np.random.normal(0, .1, sleep_data.shape)
     noise_data['label'] = 2
@@ -89,23 +89,23 @@ def train_dl():
     awake_data = dataset[dataset['label'] == 0]
     noise_data = awake_data + np.random.normal(0, .1, awake_data.shape)
     noise_data['label'] = 0
-    dataset = pd.concat([dataset, noise_data], ignore_index=True)
+    dataset = pd.concat([dataset, noise_data], ignore_index=True)'''
 
     data = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1']]
     print(data.columns)
     data = data.to_numpy()
-    label = dataset['label']
+    label = dataset['label'].round()
     onehot = LabelBinarizer()
     onehot.fit(label)
     label = onehot.transform(label)
 
     print(data.shape)
 
-    X = data.reshape(-1, 4, 1, 400, 8)
+    X = data.reshape(-1, 4, 1, 250, 8)
     y = []
 
     for i in range(X.shape[0]):
-        y.append(label[i * 1600])
+        y.append(label[i * 1000])
     y = np.array(y)
 
     x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
@@ -113,10 +113,10 @@ def train_dl():
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
 
     model = keras.models.Sequential()
-    model.add(ConvLSTM2D(filters=128, kernel_size=(1,1), activation='relu', padding = "same",  input_shape=(4, 1, 400, 8)))
+    model.add(ConvLSTM2D(filters=256, kernel_size=(1,1), activation='relu', padding = "same",  input_shape=(4, 1, 250, 8)))
     model.add(BatchNormalization())
-    model.add(Conv2D(filters=64, kernel_size=(1,1), activation='relu', padding = "same"))
-    model.add(Dropout(0.4))
+    model.add(Conv2D(filters=128, kernel_size=(1,1), activation='relu', padding = "same"))
+    model.add(Dropout(0.5))
     model.add(MaxPooling2D(pool_size=(1,1)))
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
@@ -151,3 +151,54 @@ def train_dl():
     plt.plot(history.history['acc'])
     plt.plot(history.history['loss'])
     plt.show()
+
+def train_rf():
+
+    # on prépare les données
+    print("Raw data to csv")
+    mat_to_df_raw_data()
+    print("EEG_5_band to csv")
+    df_5band()
+
+    # on charge le dataset du 10_20151125_noon.csv
+    file_path = "../../Database/SEED-VIG/dataset.csv"
+    dataset = pd.read_csv(file_path, sep=";")
+    print(dataset.describe())
+
+    # on sépare les données entre caractériqtique et les données à prédire
+    X = dataset.drop(['label'], axis=1)
+    y = dataset['label']
+
+    print(X)
+    print(y)
+
+    # on sépare le tout en un ensemble d'entrainement et un de test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    model_name = 'RandomForest'
+    score = 'precision'
+
+    param_grid = {'n_estimators': [50]}
+    # Define which metric will be used
+    score = 'precision'
+    # Create a based model
+    rf = RandomForestClassifier()  # Instantiate the grid search model
+    # 4)  Train (Fit) the best model with training data
+    model = GridSearchCV(estimator=rf, param_grid=param_grid, cv=4,
+                                     scoring='%s_macro' % score, verbose=2)
+    model.fit(X_train, y_train)
+
+    best_grid = model.best_estimator_
+
+    print("  ------------------------------------  ")
+    print("BEST Configuration is  ==== ", best_grid)
+    print("  ------------------------------------  ")
+
+
+    # on affiche ensuite l(accuracy et enfin on sauvegarde le modèle entrainé
+    print(best_grid.score(X_test, y_test))
+
+    joblib.dump(best_grid, '../api/models/'+model_name+'.pkl')
+
+    model_columns = list(X.columns)
+    joblib.dump(model_columns, '../api/models/columns.pkl')
