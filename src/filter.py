@@ -263,10 +263,6 @@ def psd_raw(dataset):
             for i in range(0, len_data):
                 label[c].append(dataset[c][i * 800])
 
-        '''df = pd.DataFrame(data)
-        df.to_csv("../../Database/SEED-VIG/psdRaw.csv", sep=";", index=False)
-        df_label = pd.DataFrame(label)
-        df_label.to_csv("../../Database/SEED-VIG/labelRaw.csv", sep=";", index=False)'''
 
 def process(dataset):
 
@@ -323,7 +319,7 @@ def process_bpci_data(dataset):
     data = {}
     print(dataset)
 
-    data['FT7']=dataset['Channel1']
+    data['FT7'] = dataset['Channel1']
     data['FT8'] = dataset['Channel2']
     data['T7'] = dataset['Channel3']
     data['CP1'] = dataset['Channel4']
@@ -339,10 +335,23 @@ def process_bpci_data(dataset):
         signal = pd.Series(filter(signal_resample,400))
         data[k] = signal
 
-
-
     df = pd.DataFrame(data)
     print(df)
     df.head(1600*20).to_json("../../Database/SEED-VIG/test.json")
 
     df.to_csv("../../Database/SEED-VIG/test.csv", sep=";", index=False)
+
+
+def filter_api(dict):
+
+    secs = dict.shape[0] / 250
+    n_sample = int(secs * 400)
+    filter_dict = {}
+
+    for c in dict.keys():
+
+        signal_resample = resample(dict[c].to_numpy(), n_sample)
+        filter_dict[c] = pd.Series(filter(signal_resample, 400))
+
+    dataset = pd.DataFrame(filter_dict)
+    return dataset

@@ -1,3 +1,4 @@
+tensorflow
 flask
 pandas
 joblib
@@ -5,7 +6,6 @@ sklearn
 flask_pymongo
 pymongo
 keras
-tensorflow
 matplotlib
 mne
 scipy

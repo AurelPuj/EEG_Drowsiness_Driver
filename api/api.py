@@ -16,7 +16,8 @@ from flask_pymongo import PyMongo
 import pickle
 import sys
 import keras
-from filter import filter
+from filter import filter_api
+from flask import Flask, render_template
 
 # Create API and load ML Algo
 app = Flask("MyEEG")
@@ -64,12 +65,13 @@ def predict():
 
     query = query.reindex(columns=model_columns, fill_value=0)
 
+
     # On charge le modèle
     json_data = {}
-    data = db.model.find({'name': 'LinearRegression'})
+    data = db.model.find({'name': 'RandomForest'})
     for i in data:
         json_data = i
-    pikled_model = json_data['LinearRegression']
+    pikled_model = json_data['RandomForest']
     model_loaded = pickle.loads(pikled_model)
 
     prediction = list(model_loaded.predict(query))
@@ -79,9 +81,10 @@ def predict():
 def predictdl():
 
     json = request.json
-    query = pd.get_dummies(pd.DataFrame(json))
-    query = query.head(13641600).to_numpy().reshape(-1, 4, 1, 400, 8)
-    prediction = deep_model.predict(query)
+    df = pd.get_dummies(pd.DataFrame(json))
+    df = filter_api(df)
+    df = df.to_numpy().reshape(-1, 4, 1, 400, 8)
+    prediction = deep_model.predict(df)
     max_prediction = max(enumerate(prediction[0]), key=(lambda x: x[1]))
 
     if max_prediction[0] == 0:
@@ -91,12 +94,12 @@ def predictdl():
     if max_prediction[0] == 2:
         message = "Sleep"
 
-    return "{}".format(prediction.round())
+    return "{}".format(message)
 
 
 @app.route("/")
-def hello():
-    return "Welcome to machine learning model APIs for predict EEG drowsiness!"
+def home():
+   return render_template('index.html')
 
 
 @app.route('/model')
@@ -116,7 +119,6 @@ def find_model():
         status=True,
         model_list=data
     )
-
 
 if __name__ == "__main__":
     ENVIRONMENT_DEBUG = os.environ.get("APP_DEBUG", True)
