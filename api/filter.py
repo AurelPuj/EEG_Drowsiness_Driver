@@ -333,21 +333,20 @@ def process_ml(dataset):
 
             signal = dataset[c]
 
-            for i in range(0, len_data):
-                data[c + '_psd_delta'].append(bandpower(signal, [0.5, 4], 'welch'))
-                data[c + '_se_delta'].append(spectral_entropy(signal, range(1, 4), 200))
+            data[c + '_psd_delta'].append(bandpower(signal, [0.5, 4], 'welch'))
+            data[c + '_se_delta'].append(spectral_entropy(signal, range(1, 4), 200))
 
-                data[c + '_psd_theta'].append(bandpower(signal, [4, 8], 'welch'))
-                data[c + '_se_theta'].append(spectral_entropy(signal, range(4, 8), 200))
+            data[c + '_psd_theta'].append(bandpower(signal, [4, 8], 'welch'))
+            data[c + '_se_theta'].append(spectral_entropy(signal, range(4, 8), 200))
 
-                data[c + '_psd_alpha'].append(bandpower(signal, [8, 14], 'welch'))
-                data[c + '_se_alpha'].append(spectral_entropy(signal, range(8, 14), 200))
+            data[c + '_psd_alpha'].append(bandpower(signal, [8, 14], 'welch'))
+            data[c + '_se_alpha'].append(spectral_entropy(signal, range(8, 14), 200))
 
-                data[c + '_psd_beta'].append(bandpower(signal, [14, 31], 'welch'))
-                data[c + '_se_beta'].append(spectral_entropy(signal, range(14, 31), 200))
+            data[c + '_psd_beta'].append(bandpower(signal, [14, 31], 'welch'))
+            data[c + '_se_beta'].append(spectral_entropy(signal, range(14, 31), 200))
 
-                data[c + '_psd_gamma'].append(bandpower(signal, [31, 50], 'welch'))
-                data[c + '_se_gamma'].append(spectral_entropy(signal, range(31, 50), 200))
+            data[c + '_psd_gamma'].append(bandpower(signal, [31, 50], 'welch'))
+            data[c + '_se_gamma'].append(spectral_entropy(signal, range(31, 50), 200))
 
     df = pd.DataFrame(data)
     return df

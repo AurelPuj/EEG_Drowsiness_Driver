@@ -62,55 +62,6 @@ def train_ml():
     model_columns = list(X.columns)
     joblib.dump(model_columns, './api/models/columns.pkl')
 
-def train_rf():
-
-    # on prépare les données
-    print("Raw data to csv")
-    mat_to_df_raw_data()
-    print("EEG_5_band to csv")
-    df_5band()
-
-    # on charge le dataset du 10_20151125_noon.csv
-    file_path = "../../Database/.../dataset.csv"
-    dataset = pd.read_csv(file_path, sep=";")
-    print(dataset.describe())
-
-    # on sépare les données entre caractériqtique et les données à prédire
-    X = dataset.drop(['label'], axis=1)
-    y = dataset['label']
-
-    print(X)
-    print(y)
-
-    # on sépare le tout en un ensemble d'entrainement et un de test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-    model_name = 'RandomForest'
-    score = 'accuracy'
-
-    param_grid = {'n_estimators': [10, 20, 30, 40, 50, 60, 70, 100]}
-
-    rf = RandomForestClassifier()
-
-    model = GridSearchCV(estimator=rf, param_grid=param_grid, cv=4,
-                                     scoring='%s_macro' % score, verbose=2)
-    model.fit(X_train, y_train)
-    best_grid = model.best_estimator_
-
-    print("  ------------------------------------  ")
-    print("BEST Configuration is  ==== ", best_grid)
-    print("  ------------------------------------  ")
-
-    param_grid = {'n_estimators': [50]}
-
-
-    # on affiche ensuite l(accuracy et enfin on sauvegarde le modèle entrainé
-    print(model.score(X_test, y_test))
-
-    joblib.dump(model, './api/models/'+model_name+'.pkl')
-
-    model_columns = list(X.columns)
-    joblib.dump(model_columns, './api/models/columns.pkl')
 
 def train_dl():
 
@@ -210,7 +161,7 @@ def train_rf():
     df_5band()
 
     # on charge le dataset du 10_20151125_noon.csv
-    file_path = "../../Database/SEED-VIG/dataset.csv"
+    file_path = "dataset.csv"
     dataset = pd.read_csv(file_path, sep=";")
     print(dataset.describe())
 
@@ -224,20 +175,37 @@ def train_rf():
     # on sépare le tout en un ensemble d'entrainement et un de test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    model_name = 'RandomForest'
+    model_name = 'SVC'
     score = 'precision'
+    param_grid = {'C': [0.1, 1, 10, 100, 1000],
+                 'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+                 'kernel': ['rbf']}
 
-    param_grid = {'n_estimators': [50]}
+    grid_search = GridSearchCV(SVC(), param_grid, refit=True, verbose=3)
+
+    '''    param_grid = {
+            'bootstrap': [True],
+            'max_depth': [80, 90, 100, 110],
+            'max_features': [2, 3],
+            'min_samples_leaf': [3, 4, 5],
+            'min_samples_split': [8, 10, 12],
+            'n_estimators': [100, 200, 300, 1000]
+        }  # Create a based model
+        rf = RandomForestClassifier()  # Instantiate the grid search model
+        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid,
+                                   cv=3, n_jobs=-1, verbose=2)
+    '''
+    '''param_grid = {'n_estimators': [50]}
     # Define which metric will be used
     score = 'precision'
     # Create a based model
     rf = RandomForestClassifier()  # Instantiate the grid search model
     # 4)  Train (Fit) the best model with training data
     model = GridSearchCV(estimator=rf, param_grid=param_grid, cv=4,
-                                     scoring='%s_macro' % score, verbose=2)
-    model.fit(X_train, y_train)
+                                     scoring='%s_macro' % score, verbose=2)'''
+    grid_search.fit(X_train, y_train)
 
-    best_grid = model.best_estimator_
+    best_grid = grid_search.best_estimator_
 
     print("  ------------------------------------  ")
     print("BEST Configuration is  ==== ", best_grid)
