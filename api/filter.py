@@ -382,14 +382,12 @@ def process_bpci_data(dataset):
 
 def filter_api(dict):
 
-    secs = dict.shape[0] / 250
-    n_sample = int(secs * 400)
+
     filter_dict = {}
 
     for c in dict.keys():
 
-        signal_resample = resample(dict[c].to_numpy(), n_sample)
-        filter_dict[c] = pd.Series(filter(signal_resample, 400))
+        filter_dict[c] = pd.Series(filter(dict[c].to_numpy(), 250))
 
     dataset = pd.DataFrame(filter_dict)
     return dataset

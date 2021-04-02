@@ -35,6 +35,8 @@ list_model = []
 for (repertoire, sousRepertoires, file) in os.walk(path_model):
     list_model.extend(file)
 db.model.drop()
+db.stream.drop()
+db.stream.insert_one({"data": {}, 'state': 0})
 
 for file_plk in list_model:
     if file_plk != 'columns.pkl' and file_plk != 'DL_CNNLSTM.h5' and file_plk != 'DL_CNNLSTMweights.h5':
@@ -83,7 +85,7 @@ def predictdl():
     json = request.json
     df = pd.get_dummies(pd.DataFrame(json))
     df = filter_api(df)
-    df = df.to_numpy().reshape(-1, 4, 1, 400, 8)
+    df = df.to_numpy().reshape(-1, 4, 1, 250, 8)
     prediction = deep_model.predict(df)
     max_prediction = max(enumerate(prediction[0]), key=(lambda x: x[1]))
 
@@ -94,7 +96,25 @@ def predictdl():
     if max_prediction[0] == 2:
         message = "Sleep"
 
+    db.stream.insert_one({"data": json, 'state': max_prediction[0]})
+
     return "{}".format(message)
+
+@app.route('/test', methods=['GET'])  # Your API endpoint URL would consist /predict
+def test():
+    _dict = db.stream.find()
+
+    for data in _dict :
+        state = data['state']
+
+    if state == 0:
+        message = ["Awake", "bg-success", str(state+1)]
+    if state == 1:
+        message = ["Falling in sleep", "bg-warning", str(state+1)]
+    if state == 2:
+        message = ["Sleep", "bg-danger", str(state+1)]
+
+    return jsonify(message)
 
 
 @app.route("/")

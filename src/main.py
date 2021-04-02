@@ -88,9 +88,6 @@ if menu == '12':
     data['O2'] = []
     data['O1'] = []
 
-    deep_model = keras.models.load_model("../api/models/DL_CNNLSTM.h5")
-    deep_model.load_weights("../api//models/DL_CNNLSTMweights.h5")
-
     def process_predict(sample):
 
         if len(data['FT7']) < 1000:
@@ -163,5 +160,5 @@ if menu == '13':
             data['O1'] = []
 
 
-    board = OpenBCICyton(port='/dev/ttyUSB1', daisy=True)
+    board = OpenBCICyton(port='/dev/ttyUSB0', daisy=True)
     board.start_stream(process_predict)
