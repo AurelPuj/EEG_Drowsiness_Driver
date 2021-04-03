@@ -22,7 +22,7 @@ for (i=0;i<8;i++){
         scales: {
           xAxes: [{
             time: {
-              unit: 'Hertz'
+              unit: 'month'
             },
             gridLines: {
               display: false
@@ -44,14 +44,8 @@ for (i=0;i<8;i++){
         legend: {
           display: false
         },
-        animation : false
-      },
-     plugins: {
-            title: {
-                display: true,
-                text: 'Test'
-            }
-        }
+        animation = false
+      }
 
     });
 }
@@ -62,22 +56,19 @@ function update_bar(){
         url: "/getpsd",
         type: "get",
         success: function (response) {
-            if (response != 3){
-                for (i=0;i<8;i++){
-                    charts[i].data = {
-                        labels: ["Beta", "Alpha", "Theta", "Delta"],
-                        datasets: [{
-                              label: "Power",
-                              backgroundColor: "rgba(2,117,216,1)",
-                              borderColor: "rgba(2,117,216,1)",
-                              data: [response[i][0], response[i][1], response[i][2], response[i][3]],
-                            }],
-                          };
-                    charts[i].update();
-                }
-
+            for (i=0;i<8;i++){
+                charts[i].data = {
+                    labels: ["Beta", "Alpha", "Theta", "Delta"],
+                    datasets: [{
+                          label: "Power",
+                          backgroundColor: "rgba(2,117,216,1)",
+                          borderColor: "rgba(2,117,216,1)",
+                          data: [response[i][0], response[i][1], response[i][2], response[i][3]],
+                        }],
+                      };
+                charts.update();
+                setTimeout(update_bar,1000);
             }
-            setTimeout(update_bar,1000);
         },
         error: function (xhr) {
             //Do Something to handle error

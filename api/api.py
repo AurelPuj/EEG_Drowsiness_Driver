@@ -107,15 +107,15 @@ def predictdl():
     db.stream.insert_one({"data": json, 'state': max_prediction[0]})
 
     psd = []
-    signal = np.array(filter(json['FT7'],250))
 
-    psd.append(bandpower(signal, [0.5, 4], 'welch'))
+    for i, k in enumerate(json.keys()):
+        psd.append([])
+        signal = np.array(filter(json[k],250))
 
-    psd.append(bandpower(signal, [4, 8], 'welch'))
-
-    psd.append(bandpower(signal, [8, 14], 'welch'))
-
-    psd.append(bandpower(signal, [14, 31], 'welch'))
+        psd[i].append(bandpower(signal, [0.5, 4], 'welch'))
+        psd[i].append(bandpower(signal, [4, 8], 'welch'))
+        psd[i].append(bandpower(signal, [8, 14], 'welch'))
+        psd[i].append(bandpower(signal, [14, 31], 'welch'))
 
     db.psd.insert_one({'psd': psd})
 
@@ -142,28 +142,35 @@ def store_raw():
 @app.route('/getstate', methods=['GET'])  # Your API endpoint URL would consist /predict
 def getstate():
     _dict = db.stream.find()
+    state = None
 
     for data in _dict :
         state = data['state']
 
-    if state == 0:
-        message = ["Awake", "bg-success", str(state+1)]
-    if state == 1:
-        message = ["Falling in sleep", "bg-warning", str(state+1)]
-    if state == 2:
-        message = ["Sleep", "bg-danger", str(state+1)]
+    if state != None:
+        if state == 0:
+            message = ["Awake", "bg-success", str(state+1)]
+        if state == 1:
+            message = ["Falling in sleep", "bg-warning", str(state+1)]
+        if state == 2:
+            message = ["Sleep", "bg-danger", str(state+1)]
 
-    return jsonify(message)
+        return jsonify(message)
+    else:
+        return jsonify(3)
+
 
 @app.route('/getpsd', methods=['GET'])  # Your API endpoint URL would consist /predict
 def getpsd():
     _dict = db.psd.find()
+    psd = None
 
     for data in _dict :
         psd = data['psd']
-
-    return jsonify(psd)
-
+    if psd != None:
+        return jsonify(psd)
+    else:
+        return jsonify(3)
 
 @app.route("/")
 def home():

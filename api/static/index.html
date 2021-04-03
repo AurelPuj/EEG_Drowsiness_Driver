@@ -80,9 +80,17 @@
                                         <i class="fas fa-chart-bar mr-1"></i>
                                         Power of waves
                                     </div>
-                                    <div class="card-body"><canvas id="myBarChart" width="100%" height="40"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart0" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart1" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart2" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart3" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart4" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart5" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart6" width="100%" height="20"></canvas></div>
+                                    <div class="card-body"><canvas id="myBarChart7" width="100%" height="20"></canvas></div>
                                 </div>
                             </div>
+
                     </div>
                 </main>
                 <footer class="py-4 bg-light mt-auto">
@@ -117,7 +125,7 @@
                     url: "/getstate",
                     type: "get",
                     success: function (response) {
-                        if (old != response[0]){
+                        if (old != response[0] && response != 3){
                             $('div.card-state').text("")
                             $('div.state').removeClass(oldClass).addClass("bg-primary");
                             $("#state"+response[2]).text(response[0]);
