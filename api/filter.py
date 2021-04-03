@@ -191,7 +191,7 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
     bp = simps(psd[idx_band], dx=freq_res)
 
     if relative:
-        bp /= simps(psd, dx=freq_res)
+        bp /= simps(psd[np.logical_and(freqs >= 0.5, freqs <= 31)], dx=freq_res)
     return bp
 
 def filter(data, fs):

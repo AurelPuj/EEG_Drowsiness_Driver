@@ -99,6 +99,19 @@ if menu == '12':
             data['T8'].append(np.array(sample.channels_data[5]) * SCALE_FACTOR_EEG)
             data['O2'].append(np.array(sample.channels_data[6]) * SCALE_FACTOR_EEG)
             data['O1'].append(np.array(sample.channels_data[7]) * SCALE_FACTOR_EEG)
+            if len(data['FT7'])%250 == 0:
+                json_data = {
+                    'FT7' : data['FT7'][-250:],
+                    'FT8': data['FT8'][-250:],
+                    'T7': data['T7'][-250:],
+                    'CP1': data['CP1'][-250:],
+                    'CP2': data['CP2'][-250:],
+                    'T8': data['T8'][-250:],
+                    'O2': data['O2'][-250:],
+                    'O1': data['O1'][-250:],
+                }
+                requests.post('http://0.0.0.0:5000/compute_psd', json=json_data)
+                requests.post('http://0.0.0.0:5000/store_raw', json=json_data)
 
         elif len(data['FT7']) == 1000:
             requests.post('http://0.0.0.0:5000/predictdl', json=data)
@@ -147,8 +160,9 @@ if menu == '13':
             data['O2'].append(np.array(sample.channels_data[6]) * SCALE_FACTOR_EEG)
             data['O1'].append(np.array(sample.channels_data[7]) * SCALE_FACTOR_EEG)
 
+
         elif len(data['FT7']) == 1000:
-            print(requests.post('http://0.0.0.0:5000/predict', json=data).text)
+            requests.post('http://0.0.0.0:5000/predict', json=data)
 
             data['FT7'] = []
             data['FT8'] = []
@@ -158,6 +172,7 @@ if menu == '13':
             data['T8'] = []
             data['O2'] = []
             data['O1'] = []
+
 
 
     board = OpenBCICyton(port='/dev/ttyUSB0', daisy=True)

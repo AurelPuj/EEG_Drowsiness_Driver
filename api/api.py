@@ -42,7 +42,7 @@ db.psd.drop()
 
 db.stream.insert_one({"data": {}, 'state': 0})
 db.raw.insert_one({"raw": [[], [], [], [], [], [], [], []]})
-db.psd.insert_one({'psd': []})
+db.psd.insert_one({'psd': [[], [], [], [], [], [], [], []]})
 
 for file_plk in list_model:
     if file_plk != 'columns.pkl' and file_plk != 'DL_CNNLSTM.h5' and file_plk != 'DL_CNNLSTMweights.h5':
@@ -89,7 +89,6 @@ def predict():
 def predictdl():
 
     db.stream.drop()
-    db.psd.drop()
     json = request.json
     df = pd.get_dummies(pd.DataFrame(json))
     df = filter_api(df)
@@ -97,34 +96,14 @@ def predictdl():
     prediction = deep_model.predict(df)
     max_prediction = max(enumerate(prediction[0]), key=(lambda x: x[1]))
 
-    if max_prediction[0] == 0:
-        message = "Awake"
-    if max_prediction[0] == 1:
-        message = "Falling in sleep"
-    if max_prediction[0] == 2:
-        message = "Sleep"
-
     db.stream.insert_one({"data": json, 'state': max_prediction[0]})
 
-    psd = []
-
-    for i, k in enumerate(json.keys()):
-        psd.append([])
-        signal = np.array(filter(json[k],250))
-
-        psd[i].append(bandpower(signal, [0.5, 4], 'welch'))
-        psd[i].append(bandpower(signal, [4, 8], 'welch'))
-        psd[i].append(bandpower(signal, [8, 14], 'welch'))
-        psd[i].append(bandpower(signal, [14, 31], 'welch'))
-
-    db.psd.insert_one({'psd': psd})
-
-    return message
+    return jsonify(1)
 
 
 @app.route('/store_raw', methods=['POST'])  # Your API endpoint URL would consist /predict
 def store_raw():
-    json = request.json['raw']
+    json = request.json
 
     _dict = db.raw.find()
 
@@ -137,6 +116,25 @@ def store_raw():
     db.raw.insert_one({'raw' : data_store})
 
     return jsonify(data_store)
+
+@app.route('/compute_psd', methods=['POST'])  # Your API endpoint URL would consist /predict
+def compute_psd():
+    json = request.json
+    db.psd.drop()
+    psd = []
+
+    for i, k in enumerate(json.keys()):
+        psd.append([])
+        signal = np.array(filter(json[k], 250))
+
+        psd[i].append(bandpower(signal, [0.5, 4], 'welch', None, True))
+        psd[i].append(bandpower(signal, [4, 8], 'welch', None, True))
+        psd[i].append(bandpower(signal, [8, 14], 'welch', None, True))
+        psd[i].append(bandpower(signal, [14, 31], 'welch', None, True))
+
+    db.psd.insert_one({'psd': psd})
+
+    return jsonify(1)
 
 
 @app.route('/getstate', methods=['GET'])  # Your API endpoint URL would consist /predict
@@ -167,6 +165,7 @@ def getpsd():
 
     for data in _dict :
         psd = data['psd']
+
     if psd != None:
         return jsonify(psd)
     else:

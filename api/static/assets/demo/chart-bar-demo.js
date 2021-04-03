@@ -34,6 +34,7 @@ for (i=0;i<8;i++){
           yAxes: [{
             ticks: {
               min: 0,
+              max: 1,
               maxTicksLimit: 5
             },
             gridLines: {
@@ -77,7 +78,7 @@ function update_bar(){
                 }
 
             }
-            setTimeout(update_bar,1000);
+            setTimeout(update_bar,500);
         },
         error: function (xhr) {
             //Do Something to handle error
