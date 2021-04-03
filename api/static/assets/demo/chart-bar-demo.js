@@ -7,12 +7,12 @@ var ctx = document.getElementById("myBarChart");
 var myLineChart = new Chart(ctx, {
   type: 'bar',
   data: {
-    labels: ["January", "February", "March", "April", "May", "June"],
+    labels: ["Beta", "Alpha", "Theta", "Delta"],
     datasets: [{
-      label: "Revenue",
+      label: "Power",
       backgroundColor: "rgba(2,117,216,1)",
       borderColor: "rgba(2,117,216,1)",
-      data: [4215, 5312, 6251, 7841, 9821, 14984],
+      data: [10000, 0, 0, 0,],
     }],
   },
   options: {
@@ -31,7 +31,6 @@ var myLineChart = new Chart(ctx, {
       yAxes: [{
         ticks: {
           min: 0,
-          max: 15000,
           maxTicksLimit: 5
         },
         gridLines: {
@@ -44,3 +43,28 @@ var myLineChart = new Chart(ctx, {
     }
   }
 });
+
+
+function update_bar(){
+    $.ajax({
+        url: "/getpsd",
+        type: "get",
+        success: function (response) {
+            myLineChart.data = {
+                labels: ["Beta", "Alpha", "Theta", "Delta"],
+                datasets: [{
+                      label: "Power",
+                      backgroundColor: "rgba(2,117,216,1)",
+                      borderColor: "rgba(2,117,216,1)",
+                      data: [response[0], response[1], response[2], response[3]],
+                    }],
+                  };
+             myLineChart.update();
+            setTimeout(update_bar,1000);
+        },
+        error: function (xhr) {
+            //Do Something to handle error
+        }
+    });
+};
+

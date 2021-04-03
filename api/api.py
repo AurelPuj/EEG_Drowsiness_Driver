@@ -16,8 +16,9 @@ from flask_pymongo import PyMongo
 import pickle
 import sys
 import keras
-from filter import filter_api
+from filter import filter_api, bandpower, filter
 from flask import Flask, render_template
+import numpy as np
 
 # Create API and load ML Algo
 app = Flask("MyEEG")
@@ -36,7 +37,12 @@ for (repertoire, sousRepertoires, file) in os.walk(path_model):
     list_model.extend(file)
 db.model.drop()
 db.stream.drop()
+db.raw.drop()
+db.psd.drop()
+
 db.stream.insert_one({"data": {}, 'state': 0})
+db.raw.insert_one({"raw": [[], [], [], [], [], [], [], []]})
+db.psd.insert_one({'psd': []})
 
 for file_plk in list_model:
     if file_plk != 'columns.pkl' and file_plk != 'DL_CNNLSTM.h5' and file_plk != 'DL_CNNLSTMweights.h5':
@@ -82,10 +88,12 @@ def predict():
 @app.route('/predictdl', methods=['POST'])  # Your API endpoint URL would consist /predict
 def predictdl():
 
+    db.stream.drop()
+    db.psd.drop()
     json = request.json
     df = pd.get_dummies(pd.DataFrame(json))
     df = filter_api(df)
-    df = df.to_numpy().reshape(-1, 4, 1, 250, 8)
+    df = df.to_numpy().reshape(-1, 8, 1, 125, 8)
     prediction = deep_model.predict(df)
     max_prediction = max(enumerate(prediction[0]), key=(lambda x: x[1]))
 
@@ -98,10 +106,41 @@ def predictdl():
 
     db.stream.insert_one({"data": json, 'state': max_prediction[0]})
 
-    return "{}".format(message)
+    psd = []
+    signal = np.array(filter(json['FT7'],250))
 
-@app.route('/test', methods=['GET'])  # Your API endpoint URL would consist /predict
-def test():
+    psd.append(bandpower(signal, [0.5, 4], 'welch'))
+
+    psd.append(bandpower(signal, [4, 8], 'welch'))
+
+    psd.append(bandpower(signal, [8, 14], 'welch'))
+
+    psd.append(bandpower(signal, [14, 31], 'welch'))
+
+    db.psd.insert_one({'psd': psd})
+
+    return message
+
+
+@app.route('/store_raw', methods=['POST'])  # Your API endpoint URL would consist /predict
+def store_raw():
+    json = request.json['raw']
+
+    _dict = db.raw.find()
+
+    for data in _dict :
+        data_store = data['raw']
+
+    db.raw.drop()
+    for i, data in enumerate(json):
+        data_store[i].append(data)
+    db.raw.insert_one({'raw' : data_store})
+
+    return jsonify(data_store)
+
+
+@app.route('/getstate', methods=['GET'])  # Your API endpoint URL would consist /predict
+def getstate():
     _dict = db.stream.find()
 
     for data in _dict :
@@ -115,6 +154,15 @@ def test():
         message = ["Sleep", "bg-danger", str(state+1)]
 
     return jsonify(message)
+
+@app.route('/getpsd', methods=['GET'])  # Your API endpoint URL would consist /predict
+def getpsd():
+    _dict = db.psd.find()
+
+    for data in _dict :
+        psd = data['psd']
+
+    return jsonify(psd)
 
 
 @app.route("/")

@@ -80,7 +80,7 @@ def train_dl():
     print("Training Deep learning")
     file_path = "../../Database/SEED-VIG/filterRaw.csv"
     dataset = pd.read_csv(file_path, sep=";")
-    sleep_data = dataset[dataset['label'] == 2]
+    '''sleep_data = dataset[dataset['label'] == 2]
 
     noise_data = sleep_data+np.random.normal(0, .1, sleep_data.shape)
     noise_data['label'] = 2
@@ -89,7 +89,7 @@ def train_dl():
     awake_data = dataset[dataset['label'] == 0]
     noise_data = awake_data + np.random.normal(0, .1, awake_data.shape)
     noise_data['label'] = 0
-    dataset = pd.concat([dataset, noise_data], ignore_index=True)
+    dataset = pd.concat([dataset, noise_data], ignore_index=True)'''
 
     data = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1']]
     print(data.columns)
@@ -101,7 +101,7 @@ def train_dl():
 
     print(data.shape)
 
-    X = data.reshape(-1, 4, 1, 250, 8)
+    X = data.reshape(-1, 8, 1, 125, 8)
     y = []
 
     for i in range(X.shape[0]):
@@ -113,7 +113,7 @@ def train_dl():
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
 
     model = keras.models.Sequential()
-    model.add(ConvLSTM2D(filters=128, kernel_size=(1,1), activation='relu', padding = "same",  input_shape=(4, 1, 250, 8)))
+    model.add(ConvLSTM2D(filters=128, kernel_size=(1,1), activation='relu', padding = "same",  input_shape=(8, 1, 125, 8)))
     model.add(BatchNormalization())
     model.add(Conv2D(filters=64, kernel_size=(1,1), activation='relu', padding = "same"))
     model.add(Dropout(0.4))
@@ -126,7 +126,7 @@ def train_dl():
                   optimizer='nadam',
                   metrics=['accuracy'])
 
-    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), batch_size=128, epochs=20, callbacks=[callback], verbose=1)
+    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), batch_size=256, epochs=100, callbacks=[callback], verbose=1)
 
     model.save("../api/models/DL_CNNLSTM.h5")
     model.save_weights("../api/models/DL_CNNLSTMweights.h5")

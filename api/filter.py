@@ -163,7 +163,7 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
       Absolute or relative band power.
     """
 
-    fs = 200
+    fs = 250
 
     band = np.asarray(band)
     low, high = band

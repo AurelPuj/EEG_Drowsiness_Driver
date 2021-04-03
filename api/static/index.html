@@ -107,14 +107,14 @@
         <script src="assets/demo/chart-bar-demo.js"></script>
         <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
         <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js" crossorigin="anonymous"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js" crossorigin="anonymous"></script>
         <script>
 
             old = "";
             oldClass = "bg-primary";
             function reload(){
                 $.ajax({
-                    url: "/test",
+                    url: "/getstate",
                     type: "get",
                     success: function (response) {
                         if (old != response[0]){
@@ -134,7 +134,7 @@
                 });
             };
             setTimeout(reload,1000);
-
+            setTimeout(update_bar,1000);
         </script>
 
 
