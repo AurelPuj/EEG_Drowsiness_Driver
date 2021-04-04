@@ -255,24 +255,53 @@ def train_voting():
 
     print(mean(scores))
 
+def train_pca():
 
-    '''param_grid = {'n_estimators': [50]}
-    # Define which metric will be used
-    score = 'precision'
-    # Create a based model
-    rf = RandomForestClassifier()  # Instantiate the grid search model
-    # 4)  Train (Fit) the best model with training data
-    model = GridSearchCV(estimator=rf, param_grid=param_grid, cv=4,
-                                     scoring='%s_macro' % score, verbose=2)'''
-    grid_search.fit(X_train, y_train)
+    from numpy import mean
+    from numpy import std
 
-    best_grid = grid_search.best_estimator_
+    from sklearn.pipeline import Pipeline
+    from sklearn.model_selection import cross_val_score
+    from sklearn.model_selection import RepeatedStratifiedKFold
+    from sklearn.decomposition import PCA
+    # on prépare les données
+    print("Raw data to csv")
+    mat_to_df_raw_data()
+    print("EEG_5_band to csv")
+    df_5band()
 
-    print("  ------------------------------------  ")
-    print("BEST Configuration is  ==== ", best_grid)
-    print("  ------------------------------------  ")
+    # on charge le dataset du 10_20151125_noon.csv
+    file_path = "../../Database/SEED-VIG/dataset.csv"
+    dataset = pd.read_csv(file_path, sep=";")
+    print(dataset.describe())
 
+    # on sépare les données entre caractériqtique et les données à prédire
+    X = dataset.drop(['label'], axis=1)
+    y = dataset['label']
 
-    # on affiche ensuite l(accuracy et enfin on sauvegarde le modèle entrainé
-    print(best_grid.score(X_test, y_test))
+    print(X)
+    print(y)
 
+    # on sépare le tout en un ensemble d'entrainement et un de test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    def get_models():
+        models = dict()
+        for i in range(1, 100):
+            steps = [('pca', PCA(n_components=i)), ('svc', RandomForestClassifier(n_estimators=100))]
+            models[str(i)] = Pipeline(steps=steps)
+        return models
+
+    def evaluate_model(model, X, y):
+        cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+        scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
+        return scores
+
+    models = get_models()
+    # evaluate the models and store results
+    results, names = list(), list()
+    for name, model in models.items():
+        scores = evaluate_model(model, X, y)
+        results.append(scores)
+        names.append(name)
+        print('>%s %.3f' % (name, mean(scores)))

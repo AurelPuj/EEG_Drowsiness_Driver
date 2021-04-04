@@ -13,7 +13,7 @@ Shanghai Jiao Tong University, China
 
 from data_process import df_concat, df_5band, stat_study, add_raw_label
 
-from model import train_ml, train_dl, train_rf, train_voting
+from model import train_ml, train_dl, train_rf, train_voting, train_pca
 from filter import process, filter_raw, psd_raw, process_bpci_data,filter_api
 import pandas as pd
 from pyOpenBCI import OpenBCICyton
@@ -34,7 +34,7 @@ if menu == '2':
     df_concat()
 
 if menu == '3':
-    train_voting()
+    train_pca()
 
 if menu == '4':
     train_dl()
