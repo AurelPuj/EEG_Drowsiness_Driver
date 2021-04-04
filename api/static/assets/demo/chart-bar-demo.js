@@ -4,6 +4,9 @@ Chart.defaults.global.defaultFontColor = '#292b2c';
 
 // Bar Chart Example
 charts = []
+title = ['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1']
+color = ['red','blue','orange','purple','pink','cyan','magenta','green' ]
+
 for (i=0;i<8;i++){
     var ctx = document.getElementById("myBarChart"+i);
 
@@ -14,7 +17,7 @@ for (i=0;i<8;i++){
         datasets: [{
           label: "Power",
           backgroundColor: "rgba(2,117,216,1)",
-          borderColor: "rgba(2,117,216,1)",
+          borderColor: color[i],
           data: [0, 0, 0, 0,],
         }],
       },
@@ -34,7 +37,6 @@ for (i=0;i<8;i++){
           yAxes: [{
             ticks: {
               min: 0,
-              max: 1,
               maxTicksLimit: 5
             },
             gridLines: {
@@ -45,14 +47,12 @@ for (i=0;i<8;i++){
         legend: {
           display: false
         },
-        animation : false
-      },
-     plugins: {
-            title: {
-                display: true,
-                text: 'Test'
-            }
+        animation : false,
+        title: {
+            display: true,
+            text: title[i]
         }
+      }
 
     });
 }
@@ -69,9 +69,9 @@ function update_bar(){
                         labels: ["Beta", "Alpha", "Theta", "Delta"],
                         datasets: [{
                               label: "Power",
-                              backgroundColor: "rgba(2,117,216,1)",
-                              borderColor: "rgba(2,117,216,1)",
-                              data: [response[i][0], response[i][1], response[i][2], response[i][3]],
+                              backgroundColor: color[i],
+                              borderColor: color[i],
+                              data: response[i],
                             }],
                           };
                     charts[i].update();

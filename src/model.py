@@ -80,6 +80,8 @@ def train_dl():
     print("Training Deep learning")
     file_path = "../../Database/SEED-VIG/filterRaw.csv"
     dataset = pd.read_csv(file_path, sep=";")
+    print(dataset.columns)
+
     '''sleep_data = dataset[dataset['label'] == 2]
 
     noise_data = sleep_data+np.random.normal(0, .1, sleep_data.shape)
@@ -91,7 +93,7 @@ def train_dl():
     noise_data['label'] = 0
     dataset = pd.concat([dataset, noise_data], ignore_index=True)'''
 
-    data = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1']]
+    data = dataset.drop('label', axis=1)
     print(data.columns)
     data = data.to_numpy()
     label = dataset['label'].round()
@@ -101,7 +103,7 @@ def train_dl():
 
     print(data.shape)
 
-    X = data.reshape(-1, 8, 1, 125, 8)
+    X = data.reshape(-1, 4, 1, 250, 32)
     y = []
 
     for i in range(X.shape[0]):
@@ -113,9 +115,9 @@ def train_dl():
     callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
 
     model = keras.models.Sequential()
-    model.add(ConvLSTM2D(filters=128, kernel_size=(1,1), activation='relu', padding = "same",  input_shape=(8, 1, 125, 8)))
+    model.add(ConvLSTM2D(filters=64, kernel_size=(1,1), activation='relu', padding = "same",  input_shape=(4, 1, 250, 32)))
     model.add(BatchNormalization())
-    model.add(Conv2D(filters=64, kernel_size=(1,1), activation='relu', padding = "same"))
+    model.add(Conv2D(filters=32, kernel_size=(1,1), activation='relu', padding = "same"))
     model.add(Dropout(0.4))
     model.add(MaxPooling2D(pool_size=(1,1)))
     model.add(Flatten())
@@ -126,7 +128,7 @@ def train_dl():
                   optimizer='nadam',
                   metrics=['accuracy'])
 
-    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), batch_size=256, epochs=100, callbacks=[callback], verbose=1)
+    history = model.fit(x_train, y_train, validation_data=(x_test, y_test), batch_size=512, epochs=100, callbacks=[callback], verbose=1)
 
     model.save("../api/models/DL_CNNLSTM.h5")
     model.save_weights("../api/models/DL_CNNLSTMweights.h5")
@@ -161,7 +163,7 @@ def train_rf():
     df_5band()
 
     # on charge le dataset du 10_20151125_noon.csv
-    file_path = "dataset.csv"
+    file_path = "../../Database/SEED-VIG/dataset.csv"
     dataset = pd.read_csv(file_path, sep=";")
     print(dataset.describe())
 
@@ -175,26 +177,19 @@ def train_rf():
     # on sépare le tout en un ensemble d'entrainement et un de test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    model_name = 'SVC'
-    score = 'precision'
-    param_grid = {'C': [0.1, 1, 10, 100, 1000],
-                 'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
-                 'kernel': ['rbf']}
+    model_name = 'RandomForest'
+    param_grid = {
+        'bootstrap': [True],
+        'max_depth': [80, 90, 100, 110],
+        'max_features': [2, 3],
+        'min_samples_leaf': [3, 4, 5],
+        'min_samples_split': [8, 10, 12],
+        'n_estimators': [100, 200, 300, 1000]
+    }  # Create a based model
+    rf = RandomForestClassifier()  # Instantiate the grid search model
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid,
+                               cv=3, n_jobs=-1, verbose=2)
 
-    grid_search = GridSearchCV(SVC(), param_grid, refit=True, verbose=3)
-
-    '''    param_grid = {
-            'bootstrap': [True],
-            'max_depth': [80, 90, 100, 110],
-            'max_features': [2, 3],
-            'min_samples_leaf': [3, 4, 5],
-            'min_samples_split': [8, 10, 12],
-            'n_estimators': [100, 200, 300, 1000]
-        }  # Create a based model
-        rf = RandomForestClassifier()  # Instantiate the grid search model
-        grid_search = GridSearchCV(estimator=rf, param_grid=param_grid,
-                                   cv=3, n_jobs=-1, verbose=2)
-    '''
     '''param_grid = {'n_estimators': [50]}
     # Define which metric will be used
     score = 'precision'
@@ -219,3 +214,65 @@ def train_rf():
 
     model_columns = list(X.columns)
     joblib.dump(model_columns, '../api/models/columns.pkl')
+
+def train_voting():
+
+    from sklearn.ensemble import VotingClassifier
+    from sklearn.model_selection import cross_val_score
+    from sklearn.model_selection import RepeatedStratifiedKFold
+    from numpy import mean
+
+    # on prépare les données
+    print("Raw data to csv")
+    mat_to_df_raw_data()
+    print("EEG_5_band to csv")
+    df_5band()
+
+    # on charge le dataset du 10_20151125_noon.csv
+    file_path = "../../Database/SEED-VIG/dataset.csv"
+    dataset = pd.read_csv(file_path, sep=";")
+    print(dataset.describe())
+
+    # on sépare les données entre caractériqtique et les données à prédire
+    X = dataset.drop(['label'], axis=1)
+    y = dataset['label']
+
+    print(X)
+    print(y)
+
+    # on sépare le tout en un ensemble d'entrainement et un de test
+
+    models = list()
+    models.append(('rf1', RandomForestClassifier(n_estimators=100)))
+    models.append(('rf2', RandomForestClassifier(n_estimators=250)))
+    models.append(('rf3', RandomForestClassifier(n_estimators=500)))
+
+    # define the voting ensemble
+    model = VotingClassifier(estimators=models, voting='hard')
+
+    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=42)
+    scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
+
+    print(mean(scores))
+
+
+    '''param_grid = {'n_estimators': [50]}
+    # Define which metric will be used
+    score = 'precision'
+    # Create a based model
+    rf = RandomForestClassifier()  # Instantiate the grid search model
+    # 4)  Train (Fit) the best model with training data
+    model = GridSearchCV(estimator=rf, param_grid=param_grid, cv=4,
+                                     scoring='%s_macro' % score, verbose=2)'''
+    grid_search.fit(X_train, y_train)
+
+    best_grid = grid_search.best_estimator_
+
+    print("  ------------------------------------  ")
+    print("BEST Configuration is  ==== ", best_grid)
+    print("  ------------------------------------  ")
+
+
+    # on affiche ensuite l(accuracy et enfin on sauvegarde le modèle entrainé
+    print(best_grid.score(X_test, y_test))
+

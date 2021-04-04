@@ -13,7 +13,7 @@ Shanghai Jiao Tong University, China
 
 from data_process import df_concat, df_5band, stat_study, add_raw_label
 
-from model import train_ml, train_dl, train_rf
+from model import train_ml, train_dl, train_rf, train_voting
 from filter import process, filter_raw, psd_raw, process_bpci_data,filter_api
 import pandas as pd
 from pyOpenBCI import OpenBCICyton
@@ -34,7 +34,7 @@ if menu == '2':
     df_concat()
 
 if menu == '3':
-    train_rf()
+    train_voting()
 
 if menu == '4':
     train_dl()
@@ -99,23 +99,24 @@ if menu == '12':
             data['T8'].append(np.array(sample.channels_data[5]) * SCALE_FACTOR_EEG)
             data['O2'].append(np.array(sample.channels_data[6]) * SCALE_FACTOR_EEG)
             data['O1'].append(np.array(sample.channels_data[7]) * SCALE_FACTOR_EEG)
-            if len(data['FT7'])%250 == 0:
+            if len(data['FT7'])%125 == 0:
                 json_data = {
-                    'FT7' : data['FT7'][-250:],
-                    'FT8': data['FT8'][-250:],
-                    'T7': data['T7'][-250:],
-                    'CP1': data['CP1'][-250:],
-                    'CP2': data['CP2'][-250:],
-                    'T8': data['T8'][-250:],
-                    'O2': data['O2'][-250:],
-                    'O1': data['O1'][-250:],
+                    'raw' : [
+                        data['FT7'],
+                        data['FT8'],
+                        data['T7'],
+                        data['CP1'],
+                        data['CP2'],
+                        data['T8'],
+                        data['O2'],
+                        data['O1']
+                     ]
                 }
                 requests.post('http://0.0.0.0:5000/compute_psd', json=json_data)
                 requests.post('http://0.0.0.0:5000/store_raw', json=json_data)
 
         elif len(data['FT7']) == 1000:
-            requests.post('http://0.0.0.0:5000/predictdl', json=data)
-
+            #requests.post('http://0.0.0.0:5000/predictdl', json=data)
             data['FT7'] = []
             data['FT8'] = []
             data['T7'] = []

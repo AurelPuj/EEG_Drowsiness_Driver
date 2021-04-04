@@ -11,3 +11,4 @@ api/__pycache__/api.cpython-36.pyc
 api/__pycache__/mongo.cpython-36.pyc
 *.xml
 
+api/models/RandomForest.pkl

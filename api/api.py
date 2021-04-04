@@ -16,7 +16,7 @@ from flask_pymongo import PyMongo
 import pickle
 import sys
 import keras
-from filter import filter_api, bandpower, filter
+from filter import filter_api, bandpower, filter_band, filter_low
 from flask import Flask, render_template
 import numpy as np
 
@@ -103,34 +103,47 @@ def predictdl():
 
 @app.route('/store_raw', methods=['POST'])  # Your API endpoint URL would consist /predict
 def store_raw():
-    json = request.json
+    json = request.json['raw']
+    raw = []
+    db.raw.drop()
 
+    for i, data in enumerate(json):
+        signal = filter_band(data, 250, 1, 31).tolist()
+        raw.append(signal)
+
+    db.raw.insert_one({'raw' : raw})
+
+    return jsonify(1)
+
+
+@app.route('/getraw', methods=['GET'])  # Your API endpoint URL would consist /predict
+def getraw():
     _dict = db.raw.find()
+    raw = None
 
     for data in _dict :
-        data_store = data['raw']
+        raw = data['raw']
 
-    db.raw.drop()
-    for i, data in enumerate(json):
-        data_store[i].append(data)
-    db.raw.insert_one({'raw' : data_store})
+    if raw != None:
+        return jsonify(raw)
+    else:
+        return jsonify(3)
 
-    return jsonify(data_store)
 
 @app.route('/compute_psd', methods=['POST'])  # Your API endpoint URL would consist /predict
 def compute_psd():
-    json = request.json
+    json = request.json['raw']
     db.psd.drop()
     psd = []
 
-    for i, k in enumerate(json.keys()):
+    for i, data in enumerate(json):
         psd.append([])
-        signal = np.array(filter(json[k], 250))
+        signal = np.array(filter_band(data, 250, 0.5, 40))
 
-        psd[i].append(bandpower(signal, [0.5, 4], 'welch', None, True))
-        psd[i].append(bandpower(signal, [4, 8], 'welch', None, True))
-        psd[i].append(bandpower(signal, [8, 14], 'welch', None, True))
-        psd[i].append(bandpower(signal, [14, 31], 'welch', None, True))
+        psd[i].append(bandpower(signal, [0.5, 4], 'welch', None))
+        psd[i].append(bandpower(signal, [4, 8], 'welch', None))
+        psd[i].append(bandpower(signal, [8, 14], 'welch', None))
+        psd[i].append(bandpower(signal, [14, 31], 'welch', None))
 
     db.psd.insert_one({'psd': psd})
 
