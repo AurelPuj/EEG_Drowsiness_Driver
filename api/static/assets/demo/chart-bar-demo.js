@@ -37,6 +37,7 @@ for (i=0;i<8;i++){
           yAxes: [{
             ticks: {
               min: 0,
+              max: 4000,
               maxTicksLimit: 5
             },
             gridLines: {
@@ -74,7 +75,7 @@ function update_bar(){
                               data: response[i],
                             }],
                           };
-                    charts[i].update();
+                    charts[i].update('active');
                 }
 
             }

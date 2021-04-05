@@ -163,7 +163,7 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
       Absolute or relative band power.
     """
 
-    fs = 200
+    fs = 250
 
     band = np.asarray(band)
     low, high = band
@@ -186,24 +186,27 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
 
     # Find index of band in frequency vector
     idx_band = np.logical_and(freqs >= low, freqs <= high)
+    total = np.logical_and(freqs >= 1, freqs <= 50)
 
     # Integral approximation of the spectrum using parabola (Simpson's rule)
     bp = simps(psd[idx_band], dx=freq_res)
 
     if relative:
-        bp /= simps(psd, dx=freq_res)
+        bp /= simps(psd[total], dx=freq_res)
     return bp
 
 def filter_band(data, fs, low, high):
 
     nyq = 0.5*fs
-    cutoff = 2
     order = 2
     low = low / nyq
     high = high / nyq
 
+    b, a = signal.iirnotch(50, 30, fs)
+    y_notch = signal.filtfilt(b, a, data)
+
     b, a = butter(order, [low, high], btype='bandpass', analog=False)
-    y_band = signal.filtfilt(b, a, data)
+    y_band = signal.filtfilt(b, a, y_notch)
 
     return y_band
 
@@ -223,7 +226,7 @@ def filter_low(data, fs):
 def filter_raw(dataset):
 
     data = {}
-    dataset = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1','label']]
+    dataset = dataset[['FT7', 'FT8', 'T7', 'P1', 'P2', 'T8', 'O2', 'O1', 'label']]
 
     for c in dataset.columns:
         if c != 'label':
@@ -237,13 +240,14 @@ def filter_raw(dataset):
             data[c + '_theta'] = pd.Series(filter_band(signal_resample, 250, 4, 8))
             data[c + '_alpha'] = pd.Series(filter_band(signal_resample, 250, 8, 14))
             data[c + '_beta'] = pd.Series(filter_band(signal_resample, 250, 14, 31))
+            data[c + '_gamma'] = pd.Series(filter_band(signal_resample, 250, 31, 50))
+
 
         else:
-
-            secs = dataset[c].shape[0] / 400
-            samps = int(secs * 250)
-            print(samps)
-            data[c] = resample(dataset[c].to_numpy(), samps)
+            data[c] = []
+            for i in range(round(dataset[c].shape[0]/1600)):
+                for i in range(1000):
+                    data[c].append(dataset[c][i*1600])
 
 
     df = pd.DataFrame(data)
@@ -253,6 +257,7 @@ def filter_raw(dataset):
 
 
 def psd_raw(dataset):
+
     data = {}
     label = {}
     len_data = round(dataset.shape[0]/800)
@@ -278,35 +283,51 @@ def psd_raw(dataset):
 def process(dataset):
 
     data = {}
-    dataset = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1','label']]
+    dataset = dataset[['FT7','FT8','T7','P1','P2','T8','O2','O1','label']]
+
+    sleep_data = dataset[dataset['label'] == 2]
+
+    noise_data = sleep_data + np.random.normal(0, .1, sleep_data.shape)
+    noise_data['label'] = 2
+    dataset = pd.concat([dataset, noise_data], ignore_index=True)
+
+    awake_data = dataset[dataset['label'] == 0]
+    noise_data = awake_data + np.random.normal(0, .1, awake_data.shape)
+    noise_data['label'] = 0
+    dataset = pd.concat([dataset, noise_data], ignore_index=True)
 
     for c in dataset.columns:
         if c != 'label':
 
             print("-----------{}-----------".format(c))
 
-            data[c+'_psd_theta'] = []
-            data[c + '_se_theta'] = []
+            data[c + '_psd_theta_ma'] = []
+            data[c + '_se_theta_ma'] = []
 
-            data[c+'_psd_alpha'] = []
-            data[c + '_se_alpha'] = []
+            data[c + '_psd_alpha_ma'] = []
+            data[c + '_se_alpha_ma'] = []
 
-            data[c+'_psd_gamma'] = []
-            data[c + '_se_gamma'] = []
+            data[c + '_psd_gamma_ma'] = []
+            data[c + '_se_gamma_ma'] = []
 
-            data[c + '_psd_delta'] = []
-            data[c + '_se_delta'] = []
+            data[c + '_psd_delta_ma'] = []
+            data[c + '_se_delta_ma'] = []
 
-            data[c + '_psd_beta'] = []
-            data[c + '_se_beta'] = []
+            data[c + '_psd_beta_ma'] = []
+            data[c + '_se_beta_ma'] = []
 
+            data[c + '_psd_theta_relative'] = []
+            data[c + '_psd_alpha_relative'] = []
+            data[c + '_psd_gamma_relative'] = []
+            data[c + '_psd_delta_relative'] = []
+            data[c + '_psd_beta_relative'] = []
 
-
+            len_data = round(len(dataset[c].to_numpy()) / 1600)
             secs = dataset[c].shape[0] / 400
             samps = int(secs * 250)
+            print(samps)
             signal_resample = resample(dataset[c].to_numpy(), samps)
-            len_data = round(len(signal_resample) / 1000)
-            signal = pd.Series(filter_band(signal_resample, 250, 1, 31))
+            signal = pd.Series(filter_band(signal_resample, 250, 1, 50))
             signal_ma = signal.rolling(window=3).mean()
             signal_ma[0] = signal[0]
             signal_ma[1] = signal[1]
@@ -314,20 +335,26 @@ def process(dataset):
 
             for i in range(0, len_data):
 
-                data[c + '_psd_delta'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [0.5, 4], 'welch', None))
-                data[c + '_se_delta'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
+                data[c + '_psd_delta_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [0.5, 4], 'welch', None))
+                data[c + '_se_delta_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
 
-                data[c + '_psd_theta'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [4, 8], 'welch', None))
-                data[c+'_se_theta'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
+                data[c + '_psd_theta_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [4, 8], 'welch', None))
+                data[c+'_se_theta_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
 
-                data[c+'_psd_alpha'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [8, 14], 'welch', None))
-                data[c+'_se_alpha'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(8, 14), 250))
+                data[c+'_psd_alpha_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [8, 14], 'welch', None))
+                data[c+'_se_alpha_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(8, 14), 250))
 
-                data[c+'_psd_beta'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [14, 30], 'welch', None))
-                data[c+'_se_beta'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(14, 30), 250))
+                data[c+'_psd_beta_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [14, 30], 'welch', None))
+                data[c+'_se_beta_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(14, 30), 250))
 
-                data[c + '_psd_gamma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [30, 40], 'welch', None))
-                data[c + '_se_gamma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(30, 40), 250))
+                data[c + '_psd_gamma_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [30, 50], 'welch', None))
+                data[c + '_se_gamma_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(30, 50), 250))
+
+                data[c + '_psd_delta_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [0.5, 4], 'welch', None, relative=True))
+                data[c + '_psd_theta_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [4, 8], 'welch', None, relative=True))
+                data[c + '_psd_alpha_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [8, 14], 'welch', None, relative=True))
+                data[c + '_psd_beta_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [14, 30], 'welch', None, relative=True))
+                data[c + '_psd_gamma_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [30, 50], 'welch', None, relative=True))
 
 
 

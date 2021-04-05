@@ -11,9 +11,9 @@ Shanghai Jiao Tong University, China
 @author: Aurelien
 """
 
-from data_process import df_concat, df_5band, stat_study, add_raw_label
+from data_process import df_concat, df_5band, stat_study, add_raw_label,add_raw_label_regress, mat_to_df_raw_data
 
-from model import train_ml, train_dl, train_rf, train_voting, train_pca
+from model import train_ml, train_dl, train_rf, train_voting, train_pca, train_lda
 from filter import process, filter_raw, psd_raw, process_bpci_data,filter_api
 import pandas as pd
 from pyOpenBCI import OpenBCICyton
@@ -34,13 +34,20 @@ if menu == '2':
     df_concat()
 
 if menu == '3':
-    train_pca()
+    train_rf()
 
 if menu == '4':
     train_dl()
 
 if menu == '5':
-    add_raw_label()
+    file_path1 = "../../Database/SEED-VIG/dataset.csv"
+    file_path2 = "../../Database/SEED-VIG/Dataset_Regression.csv"
+    dataset1 = pd.read_csv(file_path1, sep=";")
+    dataset2 = pd.read_csv(file_path2, sep=";")
+    dataset1['label'] = dataset2['perclos'].round(1)
+    dataset1.to_csv('../../Database/SEED-VIG/datasetregression.csv', sep=";", index=False)
+
+
 
 if menu == '6':
     file_path = "../../Database/SEED-VIG/Dataset_Raw.csv"
@@ -132,7 +139,7 @@ if menu == '12':
 
 if menu == '13':
 
-    SCALE_FACTOR_EEG = 4500000 / 24 / (2 ** 23 - 1)  # uV/count
+    SCALE_FACTOR_EEG = (4500000) / 12 / (2 ** 23 - 1)  # uV/count
 
     data = {}
 
@@ -144,9 +151,6 @@ if menu == '13':
     data['T8'] = []
     data['O2'] = []
     data['O1'] = []
-
-    deep_model = keras.models.load_model("../api/models/DL_CNNLSTM.h5")
-    deep_model.load_weights("../api//models/DL_CNNLSTMweights.h5")
 
 
     def process_predict(sample):
@@ -160,11 +164,24 @@ if menu == '13':
             data['T8'].append(np.array(sample.channels_data[5]) * SCALE_FACTOR_EEG)
             data['O2'].append(np.array(sample.channels_data[6]) * SCALE_FACTOR_EEG)
             data['O1'].append(np.array(sample.channels_data[7]) * SCALE_FACTOR_EEG)
-
+            if len(data['FT7']) % 125 == 0:
+                json_data = {
+                    'raw': [
+                        data['FT7'],
+                        data['FT8'],
+                        data['T7'],
+                        data['CP1'],
+                        data['CP2'],
+                        data['T8'],
+                        data['O2'],
+                        data['O1']
+                    ]
+                }
+                requests.post('http://0.0.0.0:5000/compute_psd', json=json_data)
+                requests.post('http://0.0.0.0:5000/store_raw', json=json_data)
 
         elif len(data['FT7']) == 1000:
-            requests.post('http://0.0.0.0:5000/predict', json=data)
-
+            requests.post('http://0.0.0.0:5000/predictml', json=data)
             data['FT7'] = []
             data['FT8'] = []
             data['T7'] = []
@@ -175,6 +192,5 @@ if menu == '13':
             data['O1'] = []
 
 
-
-    board = OpenBCICyton(port='/dev/ttyUSB0', daisy=True)
+    board = OpenBCICyton(port='/dev/ttyUSB1', daisy=True)
     board.start_stream(process_predict)

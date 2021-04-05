@@ -16,7 +16,7 @@ from flask_pymongo import PyMongo
 import pickle
 import sys
 import keras
-from filter import filter_api, bandpower, filter_band, filter_low
+from filter import filter_api, bandpower, filter_band, filter_low, process
 from flask import Flask, render_template
 import numpy as np
 
@@ -44,18 +44,10 @@ db.stream.insert_one({"data": {}, 'state': 0})
 db.raw.insert_one({"raw": [[], [], [], [], [], [], [], []]})
 db.psd.insert_one({'psd': [[], [], [], [], [], [], [], []]})
 
-for file_plk in list_model:
-    if file_plk != 'columns.pkl' and file_plk != 'DL_CNNLSTM.h5' and file_plk != 'DL_CNNLSTMweights.h5':
-        '''model = joblib.load(path_model+file_plk)
-        plk_model = pickle.dumps(model)
-        model_name = file_plk.replace(".pkl", "")
-        db.model.insert_one({model_name: plk_model, 'name': model_name})'''
-    elif file_plk == 'DL_CNNLSTM.h5':
-        deep_model = keras.models.load_model(path_model+file_plk)
-        deep_model.load_weights(path_model+"DL_CNNLSTMweights.h5")
-    else:
-        '''columns = joblib.load(path_model+file_plk)
-        db.model.insert_one({file_plk.replace(".pkl", ""): columns, 'name': file_plk.replace(".pkl", "")})'''
+ml_model = joblib.load(path_model+"RandomForest.pkl")
+
+deep_model = keras.models.load_model(path_model+"DL_CNNLSTM.h5")
+deep_model.load_weights(path_model+"DL_CNNLSTMweights.h5")
 
 
 @app.route('/predict', methods=['POST'])  # Your API endpoint URL would consist /predict
@@ -100,6 +92,18 @@ def predictdl():
 
     return jsonify(1)
 
+@app.route('/predictml', methods=['POST'])  # Your API endpoint URL would consist /predict
+def predictml():
+
+    db.stream.drop()
+    json = request.json
+    df = pd.get_dummies(pd.DataFrame(json))
+    df = process(df)
+    prediction = ml_model.predict(df).tolist()
+
+    db.stream.insert_one({"data": json, 'state': prediction[0]})
+
+    return jsonify(1)
 
 @app.route('/store_raw', methods=['POST'])  # Your API endpoint URL would consist /predict
 def store_raw():
@@ -108,7 +112,7 @@ def store_raw():
     db.raw.drop()
 
     for i, data in enumerate(json):
-        signal = filter_band(data, 250, 1, 31).tolist()
+        signal = filter_band(data, 250, 1, 50).tolist()
         raw.append(signal)
 
     db.raw.insert_one({'raw' : raw})
@@ -138,12 +142,12 @@ def compute_psd():
 
     for i, data in enumerate(json):
         psd.append([])
-        signal = np.array(filter_band(data, 250, 0.5, 40))
+        signal = np.array(filter_band(data, 250, 0.5, 31))
 
-        psd[i].append(bandpower(signal, [0.5, 4], 'welch', None))
-        psd[i].append(bandpower(signal, [4, 8], 'welch', None))
-        psd[i].append(bandpower(signal, [8, 14], 'welch', None))
-        psd[i].append(bandpower(signal, [14, 31], 'welch', None))
+        psd[i].append(bandpower(signal, [0.5, 4], 'welch', None, relative=True))
+        psd[i].append(bandpower(signal, [4, 8], 'welch', None, relative=True))
+        psd[i].append(bandpower(signal, [8, 14], 'welch', None, relative=True))
+        psd[i].append(bandpower(signal, [14, 31], 'welch', None, relative=True))
 
     db.psd.insert_one({'psd': psd})
 

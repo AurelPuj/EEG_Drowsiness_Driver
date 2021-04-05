@@ -22,8 +22,9 @@ import seaborn as sns
 
 def mat_to_df_raw_data():
 
-    path = "..\\DataBase\\SEED-VIG\\Raw_Data"
-    path_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
+    path = "../../Database/SEED-VIG/Raw_Data"
+    path_perclos = "../../Database/SEED-VIG/perclos_labels"
+    path_csv = "../../Database/SEED-VIG/EEG_csv"
     
     # On charge l'ensemble des fichiers .mat existant
     list_files = []
@@ -37,11 +38,11 @@ def mat_to_df_raw_data():
 
     for file_name in list_files:
         file_csv = file_name.replace(".mat", ".csv")
-        csv_path = path_csv+"\\" + file_csv
+        csv_path = path_csv+"/" + file_csv
         
         if file_csv not in list_csv:
             # On récupère les données stockées dans le fichier mat 
-            data_mat = scipy.io.loadmat(path + "\\" + file_name)
+            data_mat = scipy.io.loadmat(path + "/" + file_name)
             
             # On extrait les data de chaque éléctrodes 
             raw_data = data_mat['EEG'][0][0][0] # Data of each band
@@ -67,17 +68,17 @@ def mat_to_df_raw_data():
             # On crée un dataframe dans lequel on stock le dictionnaire -> plus rapide
             df = pd.DataFrame(data_dict)
             df.to_csv(csv_path, sep=";", index=False)
-            
+
             file_name.replace(".mat", ".csv")
 
 
 def df_5band():
 
-    path = "..\\DataBase\\SEED-VIG\\EEG_Feature_5Bands"
-    path_raw_csv = "..\\DataBase\\SEED-VIG\\EEG_csv"
-    path_csv = "..\\DataBase\\SEED-VIG\\5Bands_Perclos_Csv"
-    path_perclos = "..\\DataBase\\SEED-VIG\\perclos_labels"
-    path_json = "..\\DataBase\\SEED-VIG\\EEG_json"
+    path = "../DataBase/SEED-VIG/EEG_Feature_5Bands"
+    path_raw_csv = "../DataBase/SEED-VIG/EEG_csv"
+    path_csv = "../DataBase/SEED-VIG/5Bands_Perclos_Csv"
+    path_perclos = "../DataBase/SEED-VIG/perclos_labels"
+    path_json = "../DataBase/SEED-VIG/EEG_json"
 
     dict_df = {}
 
@@ -93,8 +94,8 @@ def df_5band():
 
     for file_name in list_files:
         file_csv = file_name.replace(".mat", ".csv")
-        csv_raw_path = path_raw_csv + "\\" + file_csv
-        csv_path = path_csv + "\\" + file_csv
+        csv_raw_path = path_raw_csv + "/" + file_csv
+        csv_path = path_csv + "/" + file_csv
 
         if file_csv not in list_csv:
 
@@ -102,8 +103,8 @@ def df_5band():
             band_headers = list(df_raw)
             waves = ['delta', 'theta', 'alpha', 'beta', 'gamma']
 
-            data_mat = scipy.io.loadmat(path + "\\" + file_name)
-            data_mat_perclos = scipy.io.loadmat(path_perclos + "\\" + file_name)
+            data_mat = scipy.io.loadmat(path + "/" + file_name)
+            data_mat_perclos = scipy.io.loadmat(path_perclos + "/" + file_name)
 
             header_signal_analyse_component = [
                 'psd_movingAve',
@@ -127,9 +128,9 @@ def df_5band():
                     data_dict['perclos'].append(perclos[0])
             print(data_dict['perclos'])
             df = pd.DataFrame(data_dict)
-            df.to_csv(path_csv + "\\" + file_csv, sep=";", index=False)
+            df.to_csv(path_csv + "/" + file_csv, sep=";", index=False)
 
-            file_json = path_json + "\\" + file_name.replace(".mat", ".json")
+            file_json = path_json + "/" + file_name.replace(".mat", ".json")
             df.to_json(file_json, orient="records")
 
 
@@ -200,7 +201,7 @@ def df_concat():
 def stat_study(file):
 
     dataset = pd.read_csv(file, sep=";")
-    #path = ".\\stat"
+    #path = "./stat"
 
     # On charge l'ensemble des fichiers .csv existant
     list_file = []
@@ -208,10 +209,10 @@ def stat_study(file):
         list_file.extend(file)
 
     if "numpy_stat.txt" in list_file:
-        os.remove(path+"\\numpy_stat.txt")
+        os.remove(path+"/numpy_stat.txt")
         print("Stat deleted !")
 
-    file_object = open(path + '\\numpy_stat.txt', 'w')
+    file_object = open(path + '/numpy_stat.txt', 'w')
     print("\n------CALCUL DE LA MOYENNE DE CHAQUE COLONNE-----\n")
     file_object.write("\n------CALCUL DE LA MOYENNE DE CHAQUE COLONNE-----\n")
     for col in dataset.columns:
@@ -263,6 +264,38 @@ def add_raw_label():
             df_raw = df_raw.assign(label=label_columns)
             df_raw.to_csv(path_raw_label+file_name, sep=";", index=False)
             print("{} created !".format(file_name))
+
+
+def add_raw_label_regress():
+
+    path_raw_csv = "../../Database/SEED-VIG/EEG_csv"
+    path_5band_csv = "../../Database/SEED-VIG/5Bands_Perclos_Csv"
+    path_raw_label = "../../Database/SEED-VIG/Raw_Data_Labelized2/"
+
+    # On charge l'ensemble des fichiers .csv existant
+    list_raw_csv = []
+    for (repertoire, sousRepertoires, file) in os.walk(path_raw_csv):
+        list_raw_csv.extend(file)
+
+    list_raw_label = []
+    for (repertoire, sousRepertoires, file) in os.walk(path_raw_label):
+        list_raw_label.extend(file)
+
+    for file_name in list_raw_csv:
+
+        if file_name not in list_raw_label:
+            df_raw = pd.read_csv((path_raw_csv+"/"+file_name), sep=";")
+            df_band = pd.read_csv((path_5band_csv+"/"+file_name), sep=";")
+
+            label_columns = []
+
+            for i, perclos in enumerate(df_band['perclos']):
+                label_columns.append(perclos)
+
+            df_raw = df_raw.assign(label=label_columns)
+            df_raw.to_csv(path_raw_label+file_name, sep=";", index=False)
+            print("{} created !".format(file_name))
+
 
 
 

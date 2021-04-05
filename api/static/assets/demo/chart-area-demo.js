@@ -32,8 +32,8 @@ for(i =0 ; i<8; i++){
                 }],
                 yAxes: [{
                     ticks: {
-                        max : 20000,
-                        min : -20000,
+                        max : 5000,
+                        min : -5000,
                         maxTicksLimit: 5
                     },
                     gridLines: {

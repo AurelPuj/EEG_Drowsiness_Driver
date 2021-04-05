@@ -163,7 +163,7 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
       Absolute or relative band power.
     """
 
-    fs = 200
+    fs = 250
 
     band = np.asarray(band)
     low, high = band
@@ -186,24 +186,27 @@ def bandpower(data, band, method='welch', window_sec=None, relative=False):
 
     # Find index of band in frequency vector
     idx_band = np.logical_and(freqs >= low, freqs <= high)
+    total = np.logical_and(freqs >= 1, freqs <= 50)
 
     # Integral approximation of the spectrum using parabola (Simpson's rule)
     bp = simps(psd[idx_band], dx=freq_res)
 
     if relative:
-        bp /= simps(psd, dx=freq_res)
+        bp /= simps(psd[total], dx=freq_res)
     return bp
 
 def filter_band(data, fs, low, high):
 
     nyq = 0.5*fs
-    cutoff = 2
     order = 2
     low = low / nyq
     high = high / nyq
 
+    b, a = signal.iirnotch(40, 30, fs)
+    y_notch = signal.filtfilt(b, a, data)
+
     b, a = butter(order, [low, high], btype='bandpass', analog=False)
-    y_band = signal.filtfilt(b, a, data)
+    y_band = signal.filtfilt(b, a, y_notch)
 
     return y_band
 
@@ -219,155 +222,63 @@ def filter_low(data, fs):
 
     return y_low
 
-
-def filter_raw(dataset):
-
-    data = {}
-    dataset = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1','label']]
-
-    for c in dataset.columns:
-        if c != 'label':
-
-            print("-----------{}-----------".format(c))
-            secs = dataset[c].shape[0] / 400
-            samps = int(secs * 250)
-            print(samps)
-            signal_resample = resample(dataset[c].to_numpy(), samps)
-            data[c+'_delta'] = pd.Series(filter_band(signal_resample, 250, 1, 4))
-            data[c + '_theta'] = pd.Series(filter_band(signal_resample, 250, 4, 8))
-            data[c + '_alpha'] = pd.Series(filter_band(signal_resample, 250, 8, 14))
-            data[c + '_beta'] = pd.Series(filter_band(signal_resample, 250, 14, 31))
-
-        else:
-
-            secs = dataset[c].shape[0] / 400
-            samps = int(secs * 250)
-            print(samps)
-            data[c] = resample(dataset[c].to_numpy(), samps)
-
-
-    df = pd.DataFrame(data)
-    df.to_csv("../../Database/SEED-VIG/filterRaw.csv", sep=";", index=False)
-
-
-
-
-def psd_raw(dataset):
-    data = {}
-    label = {}
-    len_data = round(dataset.shape[0]/800)
-    print(len(dataset['label']))
-
-    for c in dataset.columns:
-        if c != 'label':
-            data[c] = []
-            for i in range(0, len_data):
-                sig = filter(dataset[c][i*800:(i+1)*800])
-                freq, psd = signal.welch(sig)
-                print(len(psd))
-                data[c] = [*data[c], *psd]
-
-            print("-----------{}-----------".format(c))
-
-        else:
-            label[c] = []
-            for i in range(0, len_data):
-                label[c].append(dataset[c][i * 800])
-
-
-def process(dataset):
+def process(dict):
 
     data = {}
-    dataset = dataset[['FT7', 'FT8', 'T7', 'CP1', 'CP2', 'T8', 'O2', 'O1','label']]
 
-    for c in dataset.columns:
-        if c != 'label':
+    for c in dict.keys():
 
-            print("-----------{}-----------".format(c))
+        print("-----------{}-----------".format(c))
 
-            data[c+'_psd_theta'] = []
-            data[c + '_se_theta'] = []
+        data[c + '_psd_theta_ma'] = []
+        data[c + '_se_theta_ma'] = []
 
-            data[c+'_psd_alpha'] = []
-            data[c + '_se_alpha'] = []
+        data[c + '_psd_alpha_ma'] = []
+        data[c + '_se_alpha_ma'] = []
 
-            data[c+'_psd_gamma'] = []
-            data[c + '_se_gamma'] = []
+        data[c + '_psd_gamma_ma'] = []
+        data[c + '_se_gamma_ma'] = []
 
-            data[c + '_psd_delta'] = []
-            data[c + '_se_delta'] = []
+        data[c + '_psd_delta_ma'] = []
+        data[c + '_se_delta_ma'] = []
 
-            data[c + '_psd_beta'] = []
-            data[c + '_se_beta'] = []
+        data[c + '_psd_beta_ma'] = []
+        data[c + '_se_beta_ma'] = []
 
+        data[c + '_psd_theta_relative'] = []
+        data[c + '_psd_alpha_relative'] = []
+        data[c + '_psd_gamma_relative'] = []
+        data[c + '_psd_delta_relative'] = []
+        data[c + '_psd_beta_relative'] = []
 
+        signal = pd.Series(filter_band(dict[c].to_numpy(), 250, 1, 50))
+        signal_ma = signal.rolling(window=3).mean()
+        signal_ma[0] = signal[0]
+        signal_ma[1] = signal[1]
+        signal_ma = signal_ma.to_numpy()
 
-            secs = dataset[c].shape[0] / 400
-            samps = int(secs * 250)
-            signal_resample = resample(dataset[c].to_numpy(), samps)
-            len_data = round(len(signal_resample) / 1000)
-            signal = pd.Series(filter_band(signal_resample, 250, 1, 31))
-            signal_ma = signal.rolling(window=3).mean()
-            signal_ma[0] = signal[0]
-            signal_ma[1] = signal[1]
-            signal_ma = signal_ma.to_numpy()
+        data[c + '_psd_delta_ma'].append(bandpower(signal_ma, [0.5, 4], 'welch', None))
+        data[c + '_se_delta_ma'].append(spectral_entropy(signal_ma, range(4, 8), 250))
 
-            for i in range(0, len_data):
+        data[c + '_psd_theta_ma'].append(bandpower(signal_ma, [4, 8], 'welch', None))
+        data[c+'_se_theta_ma'].append(spectral_entropy(signal_ma, range(4, 8), 250))
 
-                data[c + '_psd_delta'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [0.5, 4], 'welch', None))
-                data[c + '_se_delta'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
+        data[c+'_psd_alpha_ma'].append(bandpower(signal_ma, [8, 14], 'welch', None))
+        data[c+'_se_alpha_ma'].append(spectral_entropy(signal_ma, range(8, 14), 250))
 
-                data[c + '_psd_theta'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [4, 8], 'welch', None))
-                data[c+'_se_theta'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
+        data[c+'_psd_beta_ma'].append(bandpower(signal_ma, [14, 30], 'welch', None))
+        data[c+'_se_beta_ma'].append(spectral_entropy(signal_ma, range(14, 30), 250))
 
-                data[c+'_psd_alpha'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [8, 14], 'welch', None))
-                data[c+'_se_alpha'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(8, 14), 250))
+        data[c + '_psd_gamma_ma'].append(bandpower(signal_ma, [30, 40], 'welch', None))
+        data[c + '_se_gamma_ma'].append(spectral_entropy(signal_ma, range(30, 50), 250))
 
-                data[c+'_psd_beta'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [14, 30], 'welch', None))
-                data[c+'_se_beta'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(14, 30), 250))
+        data[c + '_psd_delta_relative'].append(bandpower(signal, [0.5, 4], 'welch', None, relative=True))
+        data[c + '_psd_theta_relative'].append(bandpower(signal, [4, 8], 'welch', None, relative=True))
+        data[c + '_psd_alpha_relative'].append(bandpower(signal, [8, 14], 'welch', None, relative=True))
+        data[c + '_psd_beta_relative'].append(bandpower(signal, [14, 30], 'welch', None, relative=True))
+        data[c + '_psd_gamma_relative'].append(bandpower(signal, [30, 40], 'welch', None, relative=True))
 
-                data[c + '_psd_gamma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [30, 40], 'welch', None))
-                data[c + '_se_gamma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(30, 40), 250))
-
-
-
-        else:
-            data[c] = []
-            for i in range(0,len_data):
-                data[c].append(dataset[c][i*1600])
-
-
-    df = pd.DataFrame(data)
-    print(df)
-    df.to_csv("../../Database/SEED-VIG/dataset.csv", sep=";", index=False)
-
-
-def process_bpci_data(dataset):
-
-    data = {}
-    print(dataset)
-
-    data['FT7'] = dataset['Channel1']
-    data['FT8'] = dataset['Channel2']
-    data['T7'] = dataset['Channel3']
-    data['CP1'] = dataset['Channel4']
-    data['CP2'] = dataset['Channel5']
-    data['T8'] = dataset['Channel6']
-    data['O2'] = dataset['Channel7']
-    data['O1'] = dataset['Channel8']
-
-    for k in data.keys():
-        secs = data[k].shape[0] / 250
-        samps = int(secs * 400)
-        signal_resample = resample(data[k].to_numpy(), samps)
-        signal = pd.Series(filter(signal_resample,400))
-        data[k] = signal
-
-    df = pd.DataFrame(data)
-    print(df)
-    df.head(1600*20).to_json("../../Database/SEED-VIG/test.json")
-
-    df.to_csv("../../Database/SEED-VIG/test.csv", sep=";", index=False)
+    return pd.DataFrame(data)
 
 
 def filter_api(dict):
