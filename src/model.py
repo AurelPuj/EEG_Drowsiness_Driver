@@ -204,15 +204,9 @@ def train_rf():
 
     model_name = 'RandomForest'
     param_grid = {
-        'n_estimators': [1000]
-    }  # Create a based model
-
-    rf = RandomForestClassifier()  # Instantiate the grid search model
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid,
-                               cv=3, n_jobs=-1, verbose=2)
-
-    '''
-    'max_depth': [80, 90, 100, 110],
+        'n_estimators': [50,100,200,300,400,500,600,700,800,1000]
+    }
+    ''''max_depth': [80, 90, 100, 110],
         'max_features': [2, 3],
         'min_samples_leaf': [3, 4, 5],
         'min_samples_split': [8, 10, 12],
@@ -224,6 +218,10 @@ def train_rf():
     # 4)  Train (Fit) the best model with training data
     model = GridSearchCV(estimator=rf, param_grid=param_grid, cv=4,
                                      scoring='%s_macro' % score, verbose=2)'''
+
+    rf = RandomForestClassifier()  # Instantiate the grid search model
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid,
+                               cv=3, n_jobs=-1, verbose=2)
 
     grid_search.fit(X_train, y_train)
 

@@ -236,7 +236,6 @@ def filter_raw(dataset):
             samps = int(secs * 250)
             print(samps)
             signal_resample = resample(dataset[c].to_numpy(), samps)
-            data[c+'_delta'] = pd.Series(filter_band(signal_resample, 250, 1, 4))
             data[c + '_theta'] = pd.Series(filter_band(signal_resample, 250, 4, 8))
             data[c + '_alpha'] = pd.Series(filter_band(signal_resample, 250, 8, 14))
             data[c + '_beta'] = pd.Series(filter_band(signal_resample, 250, 14, 31))
@@ -310,16 +309,12 @@ def process(dataset):
             data[c + '_psd_gamma_ma'] = []
             data[c + '_se_gamma_ma'] = []
 
-            data[c + '_psd_delta_ma'] = []
-            data[c + '_se_delta_ma'] = []
-
             data[c + '_psd_beta_ma'] = []
             data[c + '_se_beta_ma'] = []
 
             data[c + '_psd_theta_relative'] = []
             data[c + '_psd_alpha_relative'] = []
             data[c + '_psd_gamma_relative'] = []
-            data[c + '_psd_delta_relative'] = []
             data[c + '_psd_beta_relative'] = []
 
             len_data = round(len(dataset[c].to_numpy()) / 1600)
@@ -335,8 +330,6 @@ def process(dataset):
 
             for i in range(0, len_data):
 
-                data[c + '_psd_delta_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [0.5, 4], 'welch', None))
-                data[c + '_se_delta_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
 
                 data[c + '_psd_theta_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [4, 8], 'welch', None))
                 data[c+'_se_theta_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(4, 8), 250))
@@ -350,7 +343,6 @@ def process(dataset):
                 data[c + '_psd_gamma_ma'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [30, 50], 'welch', None))
                 data[c + '_se_gamma_ma'].append(spectral_entropy(signal_ma[i * 1000:(i + 1) * 1000], range(30, 50), 250))
 
-                data[c + '_psd_delta_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [0.5, 4], 'welch', None, relative=True))
                 data[c + '_psd_theta_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [4, 8], 'welch', None, relative=True))
                 data[c + '_psd_alpha_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [8, 14], 'welch', None, relative=True))
                 data[c + '_psd_beta_relative'].append(bandpower(signal_ma[i * 1000:(i + 1) * 1000], [14, 30], 'welch', None, relative=True))

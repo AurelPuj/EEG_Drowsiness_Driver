@@ -248,7 +248,6 @@ def process(dict):
         data[c + '_psd_theta_relative'] = []
         data[c + '_psd_alpha_relative'] = []
         data[c + '_psd_gamma_relative'] = []
-        data[c + '_psd_delta_relative'] = []
         data[c + '_psd_beta_relative'] = []
 
         signal = pd.Series(filter_band(dict[c].to_numpy(), 250, 1, 50))
@@ -256,9 +255,6 @@ def process(dict):
         signal_ma[0] = signal[0]
         signal_ma[1] = signal[1]
         signal_ma = signal_ma.to_numpy()
-
-        data[c + '_psd_delta_ma'].append(bandpower(signal_ma, [0.5, 4], 'welch', None))
-        data[c + '_se_delta_ma'].append(spectral_entropy(signal_ma, range(4, 8), 250))
 
         data[c + '_psd_theta_ma'].append(bandpower(signal_ma, [4, 8], 'welch', None))
         data[c+'_se_theta_ma'].append(spectral_entropy(signal_ma, range(4, 8), 250))
